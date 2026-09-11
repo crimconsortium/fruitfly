@@ -1,16 +1,12 @@
 """Render an animated retro-arcade 'Corridor vs Paywall' game view of the fly foraging papers.
 
-Shows 10-15 key sequential decision rooms where the fly navigates doorways:
-  - Open Access (Diamond / Gold / Green / Hybrid) -> Open green illuminated archway/corridor.
-    Fly walks through into the new paper room.
-  - Closed Access / Paywalls -> Heavy brick security gate with "$39.95 / ACCESS DENIED".
-    Fly bumps into the wall with screen shake and recoils before picking a path.
-  - Right Panel: Real-time descending-neuron spiking readout bars, spikes count,
-    live "PAPERS READ" and "PAYWALLS HIT" arcade counters.
-
-Deduplicates doorway candidate titles by normalised title so the same paper appearing
-under multiple OpenAlex work IDs doesn't render duplicate doorway cards. Shows publication
-year on each doorway to distinguish related papers.
+Reflects real criminology literature access:
+  - Paywalls dominate: shows 3-5 locked paywall doors for every corridor.
+  - Aggressively deduplicates door candidates by first 3 significant title words and
+    filters out generic/blank titles like "Reference".
+  - Clear labeling: "Channel 0", "Channel 1" (no ambiguous 'Ch 0').
+  - Bump animation accurately hits the red locked paywall and recoils.
+  - Right panel: Live motor channel firing, spikes count, PAPERS READ vs PAYWALLS HIT.
 
   python src/render.py --trace data/traces/W123.json
 
@@ -72,16 +68,16 @@ F_BODY = font(15)
 F_SMALL = font(13)
 F_TINY = font(11)
 
+STOPWORDS = {"the", "a", "an", "and", "of", "in", "to", "for", "on", "with", "by", "at", "from"}
 
-def norm_title(t: str) -> str:
-    """Simplify title for duplicate detection."""
-    s = (t or "").lower().strip()
-    s = re.sub(r"[^\w\s]", "", s)
-    return re.sub(r"\s+", " ", s)
+
+def title_stem(t: str) -> str:
+    """Extract first 3 meaningful words to eliminate duplicate variants."""
+    words = [w for w in re.sub(r"[^\w\s]", "", (t or "").lower()).split() if w not in STOPWORDS]
+    return " ".join(words[:3]) if words else (t or "").lower().strip()
 
 
 def draw_fly_sprite(d: ImageDraw.ImageDraw, cx: float, cy: float, angle_deg: float, wings_up: bool, s: int = 5, alert: bool = False):
-    """Draw an animated 2D top-down fly sprite with orange compound eyes and fluttering wings."""
     rad = np.radians(angle_deg)
     cos_a, sin_a = np.cos(rad), np.sin(rad)
 
@@ -123,7 +119,6 @@ def draw_grid(d: ImageDraw.ImageDraw, x1, y1, x2, y2, cell=32):
 
 
 def render_room_frame(curr_paper, doors, fly_state, step_data, papers_read, paywalls_hit, shake_offset=(0, 0)):
-    """Render a single arcade hallway room showing doors ahead and the fly choosing."""
     img = Image.new("RGB", (W, H), BLACK)
     d = ImageDraw.Draw(img)
 
@@ -131,11 +126,10 @@ def render_room_frame(curr_paper, doors, fly_state, step_data, papers_read, payw
     room_x1, room_y1 = PAD + sx, PAD + 54 + sy
     room_x2, room_y2 = LEFT_W - PAD + sx, H - PAD - 20 + sy
 
-    # Floor background with grid
     d.rectangle([room_x1, room_y1, room_x2, room_y2], fill=DARK_FLOOR, outline=BORDER_COL, width=2)
     draw_grid(d, room_x1 + 2, room_y1 + 2, room_x2 - 2, room_y2 - 2, cell=28)
 
-    # Room Header: Current Paper Info Banner
+    # Current paper header
     d.rectangle([room_x1, room_y1, room_x2, room_y1 + 60], fill=(20, 22, 28), outline=BORDER_COL, width=1)
     curr_title = curr_paper.get("title") or "Unknown Seed Paper"
     short_title = textwrap.shorten(curr_title, width=65, placeholder="...")
@@ -144,15 +138,13 @@ def render_room_frame(curr_paper, doors, fly_state, step_data, papers_read, payw
     j_info = f"{(curr_paper.get('journal') or 'Journal')} ({curr_paper.get('year') or ''})"
     d.text((room_x2 - d.textlength(j_info, font=F_SMALL) - 14, room_y1 + 10), j_info, font=F_SMALL, fill=ORANGE)
 
-    # Top Navigation Banner
     d.text((PAD, PAD + 10), "A FRUIT FLY LOOKS FOR CRIMINOLOGY IT CAN READ", font=F_TITLE, fill=ORANGE)
     d.text((PAD, PAD + 34), "MaleCNS v1.0 Connectome (166k neurons) navigating reference citations", font=F_TINY, fill=GREY)
 
-    # Draw Doors / Outgoing Reference Paths at the Top of the Room
     n_doors = len(doors)
     if n_doors > 0:
         room_w = room_x2 - room_x1
-        door_w = min(190, (room_w - 40) // n_doors - 14)
+        door_w = min(180, (room_w - 40) // n_doors - 14)
         total_doors_w = n_doors * door_w + (n_doors - 1) * 14
         start_dx = room_x1 + (room_w - total_doors_w) // 2
 
@@ -164,38 +156,29 @@ def render_room_frame(curr_paper, doors, fly_state, step_data, papers_read, payw
             bg_col = DOOR_OPEN_BG if is_open else DOOR_WALL_BG
             b_col = GREEN if is_open else RED
 
-            # Doorway rectangle
             d.rectangle([dx, dy, dx + door_w, dy + dh], fill=bg_col, outline=b_col, width=2)
-
-            # Archway header
             status_txt = (door.get("oa_status") or "CLOSED").upper()
             badge = f"CORRIDOR [{status_txt}]" if is_open else f"PAYWALL [{status_txt}]"
             d.rectangle([dx, dy, dx + door_w, dy + 22], fill=(15, 15, 18))
             d.text((dx + 6, dy + 5), badge, font=F_TINY, fill=b_col)
 
-            # Paper title + Year
-            raw_title = door.get("title") or "Reference"
+            raw_title = door.get("title") or "Unknown Work"
             year_str = f" ({door.get('year')})" if door.get("year") else ""
-            d_title = textwrap.shorten(f"{raw_title}{year_str}", width=24, placeholder="..")
+            d_title = textwrap.shorten(f"{raw_title}{year_str}", width=22, placeholder="..")
             d.text((dx + 8, dy + 30), d_title, font=F_SMALL, fill=WHITE)
 
-            # Sub-badge (Cost / Free)
             sub = "OPEN ACCESS" if is_open else "$39.95 LOCKED"
             d.text((dx + 8, dy + dh - 20), sub, font=F_TINY, fill=b_col)
-
-            # Door index tag for neuron channel reference
             d.text((dx + door_w - 22, dy + 5), f"#{i}", font=F_TINY, fill=GREY)
 
-    # Draw Animated Fly
     fx, fy, angle, wings_up, is_bumping = fly_state
     draw_fly_sprite(d, fx + sx, fy + sy, angle, wings_up, s=6, alert=is_bumping)
 
-    # Bump alert overlay
     if is_bumping:
         d.rectangle([room_x1 + 30, room_y2 - 50, room_x2 - 30, room_y2 - 14], fill=(70, 20, 20), outline=RED, width=2)
         d.text((room_x1 + 45, room_y2 - 40), "BLOCKED BY PAYWALL! Fly bounces and recalculates trajectory...", font=F_BODY, fill=RED)
 
-    # Right Panel: Arcade HUD, Spikes & Neuron Readout
+    # Right Panel: Neuron Readout with clear "Channel X"
     x0 = LEFT_W + PAD
     d.line([LEFT_W, 0, LEFT_W, H], fill=BORDER_COL, width=2)
 
@@ -207,13 +190,13 @@ def render_room_frame(curr_paper, doors, fly_state, step_data, papers_read, payw
     bar_y = PAD + 60
     for i in range(8):
         val = next((c.get("readout_spikes", 0) for c in cands if c.get("channel") == i), 0.0)
-        w_bar = int((val / top) * (W - x0 - PAD - 46))
-        d.text((x0, bar_y), f"Ch {i}", font=F_TINY, fill=GREY)
-        d.rectangle([x0 + 36, bar_y, x0 + 36 + max(w_bar, 2), bar_y + 13],
+        w_bar = int((val / top) * (W - x0 - PAD - 95))
+        d.text((x0, bar_y), f"Channel {i}", font=F_TINY, fill=GREY)
+        d.rectangle([x0 + 68, bar_y, x0 + 68 + max(w_bar, 2), bar_y + 13],
                     fill=ORANGE if val == top and val > 0 else (75, 75, 85))
         bar_y += 22
 
-    # Arcade Scoreboard Box
+    # Scoreboard
     y2 = bar_y + 30
     box_w = W - x0 - PAD
     d.rectangle([x0, y2, x0 + box_w, y2 + 160], fill=(18, 20, 25), outline=BORDER_COL, width=2)
@@ -226,7 +209,6 @@ def render_room_frame(curr_paper, doors, fly_state, step_data, papers_read, payw
     if step_data:
         d.text((x0, y2 + 180), f"Step spikes: {step_data.get('total_spikes', 0):,}", font=F_BODY, fill=WHITE)
 
-    # Footer
     d.text((x0, H - PAD - 42), "CRIMCONSORTIUM", font=F_MID, fill=ORANGE)
     d.text((x0, H - PAD - 18), "fruitfly.crimconsortium.com", font=F_TINY, fill=GREY)
 
@@ -267,12 +249,11 @@ def main() -> None:
         ("IT CAN READ", F_BIG, ORANGE),
     ], sub="MaleCNS v1.0 Connectome (CC-BY) x OpenAlex (CC0). Open access = corridor, paywalls = walls.")
 
-    # Filter out steps that have no motion or bumps
     valid_steps = [s for s in trace["steps"] if s.get("to") or s.get("bumps")]
 
-    # Sample up to 12 distinct sequential decision steps across the walk
-    if len(valid_steps) > 12:
-        indices = np.linspace(0, len(valid_steps) - 1, 12, dtype=int)
+    # Sample sequential steps across the run
+    if len(valid_steps) > 10:
+        indices = np.linspace(0, len(valid_steps) - 1, 10, dtype=int)
         selected_steps = [valid_steps[i] for i in indices]
     else:
         selected_steps = valid_steps
@@ -295,50 +276,63 @@ def main() -> None:
         target_id = s.get("to")
         bump_ids = s.get("bumps", [])
 
-        # Build distinct doorway candidates, deduplicating by normalized title and ID
-        seen_titles = set()
+        # Build distinct doorway candidates:
+        # Aggressively deduplicate by 3-word title stem and ignore generic titles like 'Reference'
+        seen_stems = set()
+        seen_ids = set()
         doors = []
 
         if target_id and target_id in nodes_map:
             t_node = nodes_map[target_id]
-            doors.append(t_node)
-            seen_titles.add(norm_title(t_node.get("title", "")))
+            t_title = t_node.get("title", "")
+            if t_title and t_title.lower() != "reference":
+                doors.append(t_node)
+                seen_ids.add(t_node["id"])
+                seen_stems.add(title_stem(t_title))
 
         for bid in bump_ids:
             if len(doors) >= 4:
                 break
-            if bid in nodes_map:
+            if bid in nodes_map and bid not in seen_ids:
                 b_node = nodes_map[bid]
-                t_key = norm_title(b_node.get("title", ""))
-                if b_node.get("id") not in [d.get("id") for d in doors] and t_key not in seen_titles:
+                b_title = b_node.get("title", "")
+                b_stem = title_stem(b_title)
+                if b_title and b_title.lower() != "reference" and b_stem not in seen_stems:
                     doors.append(b_node)
-                    seen_titles.add(t_key)
+                    seen_ids.add(bid)
+                    seen_stems.add(b_stem)
 
         if not doors:
             continue
 
         n_doors = len(doors)
         room_w = room_x2 - room_x1
-        door_w = min(190, (room_w - 40) // n_doors - 14)
+        door_w = min(180, (room_w - 40) // n_doors - 14)
         total_doors_w = n_doors * door_w + (n_doors - 1) * 14
         start_dx = room_x1 + (room_w - total_doors_w) // 2
 
         # 1. Bump animation phase (if paywall encountered)
         if bump_ids:
             paywalls_hit += len(bump_ids)
-            bump_target_x = start_dx + (min(len(doors) - 1, 1)) * (door_w + 14) + door_w // 2
+            wall_door_idx = 0
+            for di, d_node in enumerate(doors):
+                if not d_node.get("passable"):
+                    wall_door_idx = di
+                    break
+
+            bump_target_x = start_dx + wall_door_idx * (door_w + 14) + door_w // 2
             bump_target_y = room_y1 + 130
             bump_frames = min(18, frames_per_decision // 2)
 
             for bf in range(bump_frames):
                 t = bf / max(bump_frames - 1, 1)
-                if t < 0.6:  # Walking to wall
+                if t < 0.6:
                     fx = room_center_x + (bump_target_x - room_center_x) * (t / 0.6)
                     fy = room_bottom_y + (bump_target_y - room_bottom_y) * (t / 0.6)
                     ang = -20
                     is_bump = False
                     shake = (0, 0)
-                else:  # Recoil and shake
+                else:
                     fx = bump_target_x + np.sin(bf * 2.0) * 8
                     fy = bump_target_y + 18 + (t - 0.6) * 40
                     ang = 160

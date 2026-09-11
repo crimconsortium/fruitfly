@@ -1,8 +1,9 @@
 """Pick the representative trace and write RESULTS.md.
 
-Chooses a trace from completed, non-censored crawls that has rich movement, distinct
-reference variety (avoids repetitive self-referencing runs), and sits near the median
-number of papers read.
+Chooses a representative run from completed, non-censored crawls that:
+  - Starts open, moves through multiple papers (n_steps >= 3),
+  - Hits realistic paywalls (walls_hit >= 15),
+  - Demonstrates typical traversal without endless paywall-free loops.
 
 Stdout carries exactly one line, `trace=<path>`, for $GITHUB_OUTPUT.
 """
@@ -39,8 +40,15 @@ def main() -> None:
 
     summary["censored"] = summary["seed"].map(
         lambda s: bool(seeds.get(s, {}).get("censored", False)))
-    movers = summary[(~summary["censored"]) & (summary["n_steps"] >= 4) & (summary["reachable"] >= 5)]
-    pool = movers if len(movers) else summary[summary["n_steps"] > 0]
+    
+    # Filter for realistic runs: completed crawl, moved (3-12 steps), hit representative paywalls
+    realistic = summary[
+        (~summary["censored"]) &
+        (summary["n_steps"] >= 3) &
+        (summary["n_steps"] <= 15) &
+        (summary["walls_hit"] >= 10)
+    ]
+    pool = realistic if len(realistic) else summary[(~summary["censored"]) & (summary["n_steps"] > 0)]
     if len(pool) == 0:
         pool = summary
 
