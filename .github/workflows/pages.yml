@@ -46,7 +46,7 @@ jobs:
 
       - name: Require the complete static site
         run: |
-          for file in index.html player.html stats.json fly.mp4 fly.gif CNAME robots.txt sitemap.xml favicon.svg; do
+          for file in index.html player.html stats.json fly.mp4 fly.gif fly-cartoon.mp4 fly-cartoon.jpg CNAME robots.txt sitemap.xml favicon.svg; do
             test -s "site/$file" || { echo "Missing site/$file"; exit 1; }
           done
           python -m json.tool site/stats.json > /dev/null

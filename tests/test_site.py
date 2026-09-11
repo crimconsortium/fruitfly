@@ -14,7 +14,7 @@ import yaml
 ROOT = Path(__file__).resolve().parent.parent
 SITE = ROOT / "site"
 ORIGIN = "https://fruitfly.crimconsortium.com"
-UPDATED = "2026-09-11T16:27:00-04:00"
+UPDATED = "2026-09-11T19:40:00-04:00"
 
 
 class Page(HTMLParser):
@@ -165,7 +165,8 @@ def test_domain_indexing_and_site_assets():
     assert [el.text for el in sitemap.findall("s:url/s:loc", ns)] == [ORIGIN + "/"]
     assert [el.text for el in sitemap.findall("s:url/s:lastmod", ns)] == [UPDATED]
     assert ElementTree.parse(SITE / "favicon.svg").getroot().tag.endswith("svg")
-    for filename in ("index.html", "player.html", "stats.json", "fly.mp4", "fly.gif", "favicon.svg"):
+    for filename in ("index.html", "player.html", "stats.json", "fly.mp4", "fly.gif",
+                     "fly-cartoon.mp4", "fly-cartoon.jpg", "favicon.svg"):
         assert (SITE / filename).stat().st_size > 0
 
 
@@ -204,7 +205,8 @@ def test_pages_uses_latest_main_and_only_complete_site_files():
         "url": "${{ steps.deployment.outputs.page_url }}",
     }
     check = next(step for step in steps if step.get("name") == "Require the complete static site")
-    for filename in ("index.html", "player.html", "stats.json", "fly.mp4", "fly.gif", "CNAME"):
+    for filename in ("index.html", "player.html", "stats.json", "fly.mp4", "fly.gif",
+                     "fly-cartoon.mp4", "CNAME"):
         assert filename in check["run"]
     assert steps.index(check) < steps.index(actions["actions/upload-pages-artifact@v3"])
     assert not any("src/" in step.get("run", "") for step in steps)
@@ -342,3 +344,17 @@ def test_legacy_single_shuffle_calibration_remains_supported(extra):
 def test_calibration_verdict_is_plain_text_not_html():
     result = run_stats({"calibration": {"selectivity_real": 0.41, "verdict": "<b>Keep this literal</b>"}})
     assert "&lt;b&gt;Keep this literal&lt;/b&gt;" in result["elements"]["control-numbers"]["html"]
+
+
+def test_homepage_offers_the_cartoon_cut_alongside_the_instrument():
+    page = Page(SITE / "index.html")
+    videos = {attrs["src"]: attrs for attrs in page.attrs("video")}
+    assert set(videos) == {"fly.mp4", "fly-cartoon.mp4"}
+    # The honest render stays the hero: it autoplays, the cartoon does not.
+    assert "autoplay" in videos["fly.mp4"]
+    cartoon = videos["fly-cartoon.mp4"]
+    assert "autoplay" not in cartoon
+    assert cartoon["preload"] == "metadata"
+    assert cartoon["poster"] == "fly-cartoon.jpg"
+    assert (cartoon["width"], cartoon["height"]) == ("1280", "720")
+    assert any(attrs.get("href") == "fly-cartoon.mp4" for attrs in page.attrs("a"))
