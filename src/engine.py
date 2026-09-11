@@ -14,11 +14,11 @@ How a decision is made, and what is and is not our choice:
      whose group fires most wins. Ties go to the RNG.
   5. No plasticity. Nothing about the fly changes between steps.
 
-Run src/calibrate.py first. It sets the gain (an arbitrary gain saturates the network
-at hundreds of Hz) and replaces the arbitrary readout partition with measured, balanced
-groups -- and it records whether the real wiring beats a degree-preserving shuffle. If
-data/calibration.json is absent the engine still runs, but it warns loudly that the
-readout groups are arbitrary and the resulting choices are probably noise.
+Run src/calibrate.py first. It sets the gain (an arbitrary gain saturates the network)
+and replaces the arbitrary readout partition with measured, balanced groups -- and it
+records how the real wiring compares with degree-preserving shuffles. Without
+data/calibration.json the engine still runs, but warns that the readout groups are
+arbitrary and the choices are probably noise.
 
 The fly is not smart and is not learning. What is real is the wiring it runs on and the
 walls it cannot pass.
@@ -54,8 +54,26 @@ DEFAULTS = dict(
 
 TERRAIN = {
     "diamond": "corridor", "gold": "corridor", "green": "corridor",
-    "hybrid": "gate", "bronze": "trapdoor", "closed": "wall", "unknown": "wall",
+    "hybrid": "gate", "bronze": "trapdoor", "closed": "wall",
+    "unknown": "wall", "unresolved": "wall",
 }
+
+# Keys we copy out of calibration.json into every trace. Optional by design: the
+# calibration format changed once (selectivity_shuffled -> selectivity_shuffled_mean
+# plus replicates) and that mismatch crashed run #3 at step 5/6. Never index directly.
+CALIB_KEYS = (
+    "gain", "achieved_mean_hz", "chance_level", "selectivity_real",
+    "selectivity_shuffled_mean", "selectivity_shuffled_sd",
+    "selectivity_shuffled_replicates", "shuffle_band_2sd",
+    "n_shuffle_replicates", "trials_per_score", "wiring_matters", "verdict",
+)
+
+
+def shuffled_mean(calib: dict):
+    """Mean shuffled selectivity, tolerating the older single-shuffle format."""
+    if calib.get("selectivity_shuffled_mean") is not None:
+        return calib["selectivity_shuffled_mean"]
+    return calib.get("selectivity_shuffled")
 
 
 class Brain:
@@ -97,13 +115,15 @@ class Brain:
         )
 
     def apply_calibration(self, calib: dict) -> None:
-        self.set_gain(calib["gain"])
+        if calib.get("gain") is not None:
+            self.set_gain(calib["gain"])
         groups = []
-        for bodies in calib["readout_groups"]:
+        for bodies in calib.get("readout_groups") or []:
             idx = [self.index[b] for b in bodies if b in self.index]
             groups.append(np.array(idx, dtype=int))
-        self.readout_groups = groups
-        self.calibrated = True
+        if groups:
+            self.readout_groups = groups
+            self.calibrated = True
 
     def run_detailed(self, drives: np.ndarray, rng: np.random.Generator):
         """Returns (spikes per neuron, total spikes)."""
@@ -165,7 +185,7 @@ def run_seed(brain, papers, cedges, seed_rec, policy, p, rng_seed, calib):
         if pid in papers.index:
             row = papers.loc[pid]
             return str(row.get("oa_status") or "unknown"), bool(row.get("passable"))
-        return "unknown", False
+        return "unresolved", False
 
     steps, visited, walls_hit = [], [sid], 0
     seed_status, seed_passable = meta(sid)
@@ -277,7 +297,8 @@ def run_seed(brain, papers, cedges, seed_rec, policy, p, rng_seed, calib):
             "n_steps": len(steps),
             "stuck_at": current,
             "stuck_reason": stuck_reason,
-            "truncated": bool(seed_rec.get("truncated")),
+            "censored": bool(seed_rec.get("censored", seed_rec.get("truncated"))),
+            "truncated": bool(seed_rec.get("censored", seed_rec.get("truncated"))),
         },
     }
 
@@ -300,16 +321,19 @@ def main() -> None:
     if CALIB.exists():
         calib = json.loads(CALIB.read_text())
         brain.apply_calibration(calib)
-        calib_summary = {
-            k: calib[k] for k in
-            ("gain", "achieved_mean_hz", "selectivity_real", "selectivity_shuffled",
-             "chance_level", "wiring_matters", "verdict")
-        }
-        print(f"calibrated: selectivity {calib['selectivity_real']:.1%} vs "
-              f"shuffled {calib['selectivity_shuffled']:.1%} "
-              f"(chance {calib['chance_level']:.1%})")
-        if not calib["wiring_matters"]:
-            print("NOTE: the real wiring does not beat its shuffle. Shipping it anyway.")
+        calib_summary = {k: calib.get(k) for k in CALIB_KEYS}
+        real = calib.get("selectivity_real")
+        shuf = shuffled_mean(calib)
+        chance = calib.get("chance_level")
+        parts = [f"real {real:.1%}" if real is not None else "real n/a"]
+        if shuf is not None:
+            n_rep = calib.get("n_shuffle_replicates", 1)
+            parts.append(f"shuffled mean {shuf:.1%} (n={n_rep})")
+        if chance is not None:
+            parts.append(f"chance {chance:.1%}")
+        print("calibrated: " + ", ".join(parts))
+        if calib.get("verdict"):
+            print(f"  verdict: {calib['verdict']}")
     else:
         print("WARNING: no data/calibration.json. Readout groups are ARBITRARY and the "
               "fly's choices are probably noise. Run src/calibrate.py.")
@@ -328,8 +352,8 @@ def main() -> None:
         (TRACES / f"{rec['seed']}.json").write_text(json.dumps(trace))
         r = trace["result"]
         summary.append({"seed": rec["seed"], **r})
-        print(f"{rec['seed']}: visited={r['visited']:4d} walls={r['walls_hit']:4d} "
-              f"steps={r['n_steps']:4d} stuck={r['stuck_reason']}")
+        print(f"{rec['seed']}: visited={r['visited']:5d} walls={r['walls_hit']:5d} "
+              f"steps={r['n_steps']:5d} stuck={r['stuck_reason']}")
 
     pd.DataFrame(summary).to_csv(TRACES / "summary.csv", index=False)
     print(f"\n{len(summary)} traces -> data/traces/")

@@ -6,24 +6,26 @@ wall. A paper we could not look up is UNRESOLVED and is never counted as a wall.
 
 TWO VARIABLES, ONE OF WHICH CAN BE CENSORED
 -------------------------------------------
-Run #1 reported "99% of seeds paywalled". The truth was 75%. 25 of 100 seeds were
-correctly recorded as open, but 24 of those hit the crawl cap, were marked truncated,
-and were then excluded from the headline: 75 blocked + 1 open = 75/76 = 98.68%.
+Run #1 reported "99% of seeds paywalled". The truth was 75%: 73 closed plus 2 bronze,
+with 25 open. 25 of 100 seeds were correctly recorded as open, but 24 of those hit the
+crawl cap, were marked truncated, and were then excluded from the headline:
+75 blocked + 1 open = 75/76 = 98.68%.
 
 Hitting a compute cap makes a crawl's reachable TOTAL uncertain. It does not make the
 seed paper's ACCESS STATUS uncertain. So seed-level statistics use ALL seeds, and
 crawl-size statistics are reported for completed crawls with censored ones counted.
 
-SURVIVING THE NETWORK
----------------------
-Run #2 died after 44 seeds because one batch request exhausted its retries, and all 44
-seeds of work were discarded. Three changes:
+SURVIVING THE NETWORK, AND NOT REDOING WORK
+-------------------------------------------
+Run #2 died after 44 seeds because one batch exhausted its retries and all 44 seeds of
+work were discarded. Run #3 crawled fine and then died in a later stage, which would
+have meant re-crawling everything. So:
 
   * a batch that fails permanently marks those IDs unresolved and the crawl continues.
-    The run aborts only if the share of failed batches exceeds max_failed_batch_share.
-  * every completed seed is checkpointed to seeds.partial.json, and a re-run resumes
-    from it unless --fresh is passed.
-  * one process-wide work cache, so a reference shared by twenty seeds is fetched once.
+    The run aborts only if failed batches exceed max_failed_batch_share.
+  * every completed seed is checkpointed to seeds.partial.json and a re-run resumes.
+  * if committed artifacts already match the current config, the crawl SKIPS ITSELF.
+    Change the config, or pass --fresh, to force a new crawl.
 
 Definitions:
   reachable             = passable papers entered, INCLUDING the seed itself
@@ -48,6 +50,7 @@ from openalex import OpenAlexError, get, warn_if_no_mailto
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "data" / "citations"
 CHECKPOINT = OUT / "seeds.partial.json"
+MANIFEST = OUT / "manifest.json"
 
 SELECT = ",".join([
     "id", "display_name", "publication_year", "primary_location",
@@ -241,10 +244,23 @@ def crawl_seed(seed: dict, cfg: dict, ccfg: dict, api_cfg: dict) -> tuple[dict, 
     return record, local, edges
 
 
+def artifacts_are_current(ccfg: dict, policy: dict) -> bool:
+    if not MANIFEST.exists():
+        return False
+    for needed in ("papers.parquet", "edges.parquet", "seeds.json"):
+        if not (OUT / needed).exists():
+            return False
+    try:
+        m = json.loads(MANIFEST.read_text())
+    except json.JSONDecodeError:
+        return False
+    return m.get("citations_config") == ccfg and m.get("policy") == policy
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--fresh", action="store_true",
-                    help="ignore any checkpoint and start over")
+                    help="ignore checkpoint and existing artifacts; crawl from scratch")
     args = ap.parse_args()
 
     cfg = yaml.safe_load((ROOT / "config.yml").read_text())
@@ -253,6 +269,12 @@ def main() -> None:
                               "max_failed_batch_share": 0.1})
     y0, y1 = cfg["policy"]["years"]
     OUT.mkdir(parents=True, exist_ok=True)
+
+    if not args.fresh and not CHECKPOINT.exists() and artifacts_are_current(ccfg, cfg["policy"]):
+        print("Crawl artifacts already match the current config and policy. Skipping the "
+              "crawl. Pass --fresh (or the workflow's fresh input) to force a new one.")
+        return
+
     warn_if_no_mailto()
 
     sources = pd.read_csv(ROOT / "data" / "sources.csv")
@@ -323,7 +345,7 @@ def main() -> None:
     api_stats["cache_size"] = len(WORK_CACHE)
     manifest = summarize(seed_records, status_counts, cfg["policy"], ccfg,
                          len(papers), api_stats)
-    (OUT / "manifest.json").write_text(json.dumps(manifest, indent=2))
+    MANIFEST.write_text(json.dumps(manifest, indent=2))
     CHECKPOINT.unlink(missing_ok=True)
 
     sa = manifest["seed_access"]
