@@ -10,9 +10,15 @@ How a decision is made, and what is and is not our choice:
      count. Walls drive their own band too, so they perturb the dynamics without being
      selectable. This encoding is OUR choice and it is declared here.
   3. Spikes propagate through the real, signed MaleCNS subgraph for window_ms.
-  4. Descending neurons are partitioned into n_channels groups. The candidate whose
-     group spiked most wins. Ties go to the RNG.
+  4. Descending neurons are grouped into n_channels readout populations. The candidate
+     whose group fires most wins. Ties go to the RNG.
   5. No plasticity. Nothing about the fly changes between steps.
+
+Run src/calibrate.py first. It sets the gain (an arbitrary gain saturates the network
+at hundreds of Hz) and replaces the arbitrary readout partition with measured, balanced
+groups -- and it records whether the real wiring beats a degree-preserving shuffle. If
+data/calibration.json is absent the engine still runs, but it warns loudly that the
+readout groups are arbitrary and the resulting choices are probably noise.
 
 The fly is not smart and is not learning. What is real is the wiring it runs on and the
 walls it cannot pass.
@@ -36,12 +42,14 @@ ROOT = Path(__file__).resolve().parent.parent
 CONN = ROOT / "data" / "connectome"
 CITE = ROOT / "data" / "citations"
 TRACES = ROOT / "data" / "traces"
+CALIB = ROOT / "data" / "calibration.json"
 
+# gain is a placeholder: calibrate.py determines it. 0.02 saturates at ~481 Hz.
 DEFAULTS = dict(
     dt_ms=1.0, window_ms=50, tau_v_ms=20.0, tau_syn_ms=5.0,
     v_rest=-52.0, v_threshold=-45.0, v_reset=-52.0,
-    gain=0.02, n_input_neurons=800, n_channels=8, base_hz=60.0,
-    wall_hz=90.0, max_steps=5000, learning=False,
+    gain=0.002, input_amp=2.0, n_input_neurons=800, n_channels=8,
+    base_hz=60.0, wall_hz=90.0, max_steps=5000, learning=False,
 )
 
 TERRAIN = {
@@ -56,18 +64,20 @@ class Brain:
     def __init__(self, neurons: pd.DataFrame, edges: pd.DataFrame, p: dict):
         self.p = p
         bodies = neurons["body"].to_numpy()
+        self.bodies = bodies
         self.index = {b: i for i, b in enumerate(bodies)}
         self.n = len(bodies)
 
         pre = edges["pre"].map(self.index).to_numpy()
         post = edges["post"].map(self.index).to_numpy()
         ok = ~(pd.isna(pre) | pd.isna(post))
-        w = edges["weight"].to_numpy()[ok] * edges["sign"].to_numpy()[ok] * p["gain"]
-        self.W = sp.csr_matrix(
-            (w, (pre[ok].astype(int), post[ok].astype(int))), shape=(self.n, self.n)
-        )
+        self.w_raw = edges["weight"].to_numpy()[ok] * edges["sign"].to_numpy()[ok]
+        self.rows = pre[ok].astype(int)
+        self.cols = post[ok].astype(int)
+        self.set_gain(p["gain"])
 
-        out_strength = np.asarray(abs(self.W).sum(axis=1)).ravel()
+        out_strength = np.zeros(self.n)
+        np.add.at(out_strength, self.rows, np.abs(self.w_raw))
         readout_mask = neurons["is_readout"].fillna(False).to_numpy().astype(bool)
         self.readout_idx = np.flatnonzero(readout_mask)
         if self.readout_idx.size == 0:
@@ -76,13 +86,27 @@ class Brain:
         cand = np.flatnonzero(~readout_mask)
         order = cand[np.argsort(-out_strength[cand], kind="stable")]
         self.input_idx = order[: p["n_input_neurons"]]
+        self.input_bands = np.array_split(self.input_idx, p["n_channels"])
+        self.readout_groups = np.array_split(self.readout_idx, p["n_channels"])
+        self.calibrated = False
 
-        k = p["n_channels"]
-        self.input_bands = np.array_split(self.input_idx, k)
-        self.readout_groups = np.array_split(self.readout_idx, k)
+    def set_gain(self, gain: float) -> None:
+        self.gain = gain
+        self.W = sp.csr_matrix(
+            (self.w_raw * gain, (self.rows, self.cols)), shape=(self.n, self.n)
+        )
 
-    def run(self, drives: np.ndarray, rng: np.random.Generator):
-        """drives: per-channel Hz. Returns (spikes per readout group, total spikes)."""
+    def apply_calibration(self, calib: dict) -> None:
+        self.set_gain(calib["gain"])
+        groups = []
+        for bodies in calib["readout_groups"]:
+            idx = [self.index[b] for b in bodies if b in self.index]
+            groups.append(np.array(idx, dtype=int))
+        self.readout_groups = groups
+        self.calibrated = True
+
+    def run_detailed(self, drives: np.ndarray, rng: np.random.Generator):
+        """Returns (spikes per neuron, total spikes)."""
         p = self.p
         steps = int(p["window_ms"] / p["dt_ms"])
         decay_syn = float(np.exp(-p["dt_ms"] / p["tau_syn_ms"]))
@@ -90,7 +114,7 @@ class Brain:
 
         v = np.full(self.n, p["v_rest"], dtype=np.float32)
         current = np.zeros(self.n, dtype=np.float32)
-        group_spikes = np.zeros(len(self.readout_groups), dtype=np.int64)
+        per_neuron = np.zeros(self.n, dtype=np.int64)
         total = 0
 
         prob = np.zeros(self.n, dtype=np.float32)
@@ -100,7 +124,7 @@ class Brain:
 
         for _ in range(steps):
             current *= decay_syn
-            current += (rng.random(self.n) < prob).astype(np.float32) * 2.0
+            current += (rng.random(self.n) < prob).astype(np.float32) * p["input_amp"]
             v += alpha * (p["v_rest"] - v) + current
             fired = v >= p["v_threshold"]
             if fired.any():
@@ -108,10 +132,16 @@ class Brain:
                 current += np.asarray(
                     self.W[np.flatnonzero(fired)].sum(axis=0), dtype=np.float32
                 ).ravel()
+                per_neuron += fired
                 total += int(fired.sum())
-                for g, idx in enumerate(self.readout_groups):
-                    group_spikes[g] += int(fired[idx].sum())
-        return group_spikes, total
+        return per_neuron, total
+
+    def run(self, drives: np.ndarray, rng: np.random.Generator):
+        per_neuron, total = self.run_detailed(drives, rng)
+        scores = np.array([
+            per_neuron[g].mean() if len(g) else 0.0 for g in self.readout_groups
+        ])
+        return scores, total
 
 
 def load_graphs():
@@ -123,7 +153,7 @@ def load_graphs():
     return neurons, edges, papers, cedges, seeds
 
 
-def run_seed(brain, papers, cedges, seed_rec, policy, p, rng_seed):
+def run_seed(brain, papers, cedges, seed_rec, policy, p, rng_seed, calib):
     sid = seed_rec["seed"]
     rng = np.random.default_rng(rng_seed)
     sub = cedges[cedges["seed"] == sid]
@@ -185,10 +215,10 @@ def run_seed(brain, papers, cedges, seed_rec, policy, p, rng_seed):
             if bumps:
                 drives[len(cands) % p["n_channels"]] += p["wall_hz"]
 
-            group_spikes, total = brain.run(drives, rng)
-            scores = group_spikes[: len(cands)].astype(float)
-            scores += rng.random(len(cands)) * 1e-6
-            winner = int(np.argmax(scores))
+            scores, total = brain.run(drives, rng)
+            sc = scores[: len(cands)].astype(float)
+            sc = sc + rng.random(len(cands)) * 1e-6
+            winner = int(np.argmax(sc))
 
             steps.append({
                 "t": t,
@@ -198,7 +228,7 @@ def run_seed(brain, papers, cedges, seed_rec, policy, p, rng_seed):
                     {
                         "id": nb, "channel": i, "passable": True, "oa_status": st,
                         "drive_hz": round(float(drives[i]), 2),
-                        "readout_spikes": int(group_spikes[i]),
+                        "readout_spikes": round(float(scores[i]), 4),
                     }
                     for i, (nb, st) in enumerate(cands)
                 ],
@@ -227,7 +257,12 @@ def run_seed(brain, papers, cedges, seed_rec, policy, p, rng_seed):
 
     return {
         "schema": "trace/v1",
-        "engine": {**p, "rng_seed": rng_seed, "neurons": brain.n, "edges": int(brain.W.nnz)},
+        "engine": {
+            **p, "gain": brain.gain, "rng_seed": rng_seed,
+            "neurons": brain.n, "edges": int(brain.W.nnz),
+            "calibrated": brain.calibrated,
+        },
+        "calibration": calib,
         "policy": {"open_statuses": policy["open_statuses"]},
         "seed": {
             "id": sid, "title": seed_rec.get("title"), "journal": seed_rec.get("journal"),
@@ -260,6 +295,25 @@ def main() -> None:
 
     neurons, edges, papers, cedges, seeds = load_graphs()
     brain = Brain(neurons, edges, p)
+
+    calib_summary = None
+    if CALIB.exists():
+        calib = json.loads(CALIB.read_text())
+        brain.apply_calibration(calib)
+        calib_summary = {
+            k: calib[k] for k in
+            ("gain", "achieved_mean_hz", "selectivity_real", "selectivity_shuffled",
+             "chance_level", "wiring_matters", "verdict")
+        }
+        print(f"calibrated: selectivity {calib['selectivity_real']:.1%} vs "
+              f"shuffled {calib['selectivity_shuffled']:.1%} "
+              f"(chance {calib['chance_level']:.1%})")
+        if not calib["wiring_matters"]:
+            print("NOTE: the real wiring does not beat its shuffle. Shipping it anyway.")
+    else:
+        print("WARNING: no data/calibration.json. Readout groups are ARBITRARY and the "
+              "fly's choices are probably noise. Run src/calibrate.py.")
+
     print(f"brain: {brain.n:,} neurons, {brain.W.nnz:,} edges, "
           f"{brain.readout_idx.size:,} readout, {brain.input_idx.size:,} inputs")
 
@@ -270,7 +324,7 @@ def main() -> None:
 
     summary = []
     for rec in targets:
-        trace = run_seed(brain, papers, cedges, rec, cfg["policy"], p, rng_seed)
+        trace = run_seed(brain, papers, cedges, rec, cfg["policy"], p, rng_seed, calib_summary)
         (TRACES / f"{rec['seed']}.json").write_text(json.dumps(trace))
         r = trace["result"]
         summary.append({"seed": rec["seed"], **r})
