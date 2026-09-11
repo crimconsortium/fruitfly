@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>fruitfly &mdash; CrimConsortium</title>
+<meta name="description" content="A simulated fruit fly brain forages the criminology citation graph. Papers you can read are corridors. Papers you cannot read are walls.">
+<meta property="og:title" content="A fruit fly looks for criminology it can read">
+<meta property="og:description" content="Real connectome. Real citation graph. Real paywalls.">
+<meta property="og:video" content="https://fruitfly.crimconsortium.com/fly.mp4">
+<meta name="twitter:card" content="player">
+<style>
+  :root { --orange:#f68212; --bg:#000; --fg:#f0f0f0; --dim:#9a9a9a; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg);
+         font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif; }
+  .wrap { max-width:860px; margin:0 auto; padding:48px 20px 96px; }
+  .brand { color:var(--orange); font-weight:700; letter-spacing:.14em; font-size:13px; }
+  h1 { font-size:clamp(28px,5vw,44px); line-height:1.15; margin:.4em 0 .2em; }
+  h1 em { color:var(--orange); font-style:normal; }
+  h2 { font-size:20px; margin-top:2.4em; border-bottom:1px solid #222; padding-bottom:.3em; }
+  p.lede { font-size:19px; color:#d8d8d8; }
+  video { width:100%; background:#000; border:1px solid #222; margin:28px 0 8px; }
+  .stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:14px; margin:24px 0; }
+  .stat { border:1px solid #222; padding:14px; }
+  .stat b { display:block; font-size:30px; color:var(--orange); }
+  .stat span { font-size:12px; color:var(--dim); text-transform:uppercase; letter-spacing:.08em; }
+  table { width:100%; border-collapse:collapse; font-size:14px; }
+  th,td { text-align:left; padding:7px 8px; border-bottom:1px solid #1c1c1c; }
+  th { color:var(--dim); font-weight:600; }
+  code { background:#141414; padding:1px 5px; color:var(--orange); }
+  a { color:var(--orange); }
+  .null { border-left:3px solid var(--orange); padding:12px 16px; background:#0d0d0d; }
+  footer { margin-top:64px; color:var(--dim); font-size:13px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">CRIMRXIV &middot; CRIMCONSORTIUM</div>
+  <h1>A fruit fly looks for <em>criminology it can read</em></h1>
+  <p class="lede">We dropped a simulated fruit fly brain onto a randomly chosen criminology
+  paper and let it walk outward through reference lists. Open-access papers are corridors.
+  Paywalled papers are walls. It explores until it runs out of things it can read.</p>
+
+  <video src="fly.mp4" autoplay muted loop playsinline controls></video>
+
+  <div class="stats" id="stats"></div>
+
+  <h2>What is real here</h2>
+  <p>The wiring is the real thing: <strong>MaleCNS v1.0</strong>, the complete connectome of an
+  adult male <em>Drosophila</em> central nervous system &mdash; about 166,700 neurons, published
+  September 2026 by HHMI Janelia, the University of Cambridge, the MRC LMB, and Google Research,
+  released CC-BY. The citation graph is real too, from OpenAlex (CC0). The paywalls are extremely
+  real.</p>
+  <p>The fly is not smart. It is not learning. It is a reactive random walker whose turns are
+  decided by spikes propagating through that wiring. That is the point: even a bug can explore an
+  open literature, and even a bug is stopped by a paywall.</p>
+
+  <h2>We did not choose the journals</h2>
+  <p>The corpus is the Web of Science research area <strong>Criminology &amp; Penology</strong>,
+  adopted as-is &mdash; 53 journals, no additions, no removals. <em>European Journal of
+  Criminology</em> and <em>Crime Science</em> are not in it. That is Clarivate's boundary, not ours.
+  The authoritative version of that list is available only to Web of Science subscribers: the
+  conventional definition of criminology is itself paywalled.</p>
+
+  <h2>What counts as open</h2>
+  <table>
+    <tr><th>OpenAlex status</th><th>Here</th><th>Why</th></tr>
+    <tr><td>diamond</td><td>corridor</td><td>fully OA journal, no author charges</td></tr>
+    <tr><td>gold</td><td>corridor</td><td>OA journal indexed in DOAJ</td></tr>
+    <tr><td>green</td><td>corridor</td><td>free copy in a repository</td></tr>
+    <tr><td>hybrid</td><td>gate</td><td>open license inside a toll journal</td></tr>
+    <tr><td>bronze</td><td>trapdoor &mdash; impassable</td><td>free today at the publisher's discretion, no open license</td></tr>
+    <tr><td>closed</td><td>wall</td><td>not free to read</td></tr>
+  </table>
+  <p>Excluding bronze is stricter than OpenAlex's own <code>is_oa</code>. Because that choice makes
+  paywalls look worse, the bronze-inclusive number is published too.</p>
+
+  <h2>We checked whether the brain mattered</h2>
+  <div class="null" id="control">
+    <p>Most of the fly-brain demos going around do not run a control. We did: the whole pipeline
+    was rebuilt on a degree-preserving shuffle of the same connectome, and we compared how well the
+    readout identifies which input channel was driven.</p>
+    <p id="control-numbers"></p>
+  </div>
+
+  <h2>Everything is open</h2>
+  <p>Code, data, the full trace, and the negative control:
+  <a href="https://github.com/crimconsortium/fruitfly">github.com/crimconsortium/fruitfly</a>.
+  Code MIT, our data and figures CC-BY 4.0. Connectome CC-BY (HHMI Janelia / Cambridge / MRC LMB /
+  Google Research). Metadata from OpenAlex, CC0.</p>
+
+  <footer>
+    A <a href="https://www.crimrxiv.com">CrimRxiv</a> /
+    <a href="https://crimconsortium.com">CrimConsortium</a> project &mdash;
+    making criminology free and useful.
+  </footer>
+</div>
+<script>
+fetch('stats.json').then(r => r.json()).then(s => {
+  const r = s.result, c = s.calibration || {};
+  document.getElementById('stats').innerHTML = [
+    ['papers reached', r.reachable],
+    ['paywalls hit', r.walls_hit],
+    ['moves', r.n_steps],
+    ['neurons simulated', (s.engine.neurons || 0).toLocaleString()]
+  ].map(([k, v]) => `<div class="stat"><b>${v}</b><span>${k}</span></div>`).join('');
+  if (c.selectivity_real !== undefined) {
+    const pct = x => (x * 100).toFixed(0) + '%';
+    document.getElementById('control-numbers').innerHTML =
+      `Real connectome: <strong>${pct(c.selectivity_real)}</strong>. ` +
+      `Shuffled control: <strong>${pct(c.selectivity_shuffled)}</strong>. ` +
+      `Chance: ${pct(c.chance_level)}.<br>${c.verdict || ''}`;
+  }
+});
+</script>
+</body>
+</html>
