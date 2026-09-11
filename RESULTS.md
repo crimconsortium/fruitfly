@@ -25,8 +25,8 @@ Seed status counts: `{'closed': 73, 'green': 14, 'hybrid': 11, 'bronze': 2}`
 | Crawls completed | 80 |
 | Crawls censored at the 800-paper cap | 20 |
 | Share of open seeds censored | 80% |
-| Median papers beyond the seed (completed only) | 0 |
-| Max papers beyond the seed (completed only) | 133 |
+| Median papers read beyond the seed (completed only) | 0 |
+| Max papers read beyond the seed (completed only) | 133 |
 | Median paywalls hit (completed only) | 0 |
 
 20 crawls reached the cap of 800 papers and were stopped. Their reachable totals are lower bounds and are excluded from crawl-size averages only.
@@ -66,7 +66,7 @@ Replicates: `[0.875, 0.875, 0.7344, 0.7188, 0.875]`
 - Seed paper: Public Vulnerability to the Police: A Quantitative Inquiry
 - Journal: Criminal Justice and Behavior (2021)
 - Seed access: green
-- Papers reached: 129
+- Papers read: 129
 - Paywalls hit: 1824
 - Moves: 129
 - Ended because: no_passable_neighbours
