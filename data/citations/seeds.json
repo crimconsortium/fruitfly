@@ -8,7 +8,10 @@
     "seed_passable": false,
     "world_size": 1,
     "reachable": 0,
+    "reachable_beyond_seed": 0,
     "walls": 0,
+    "unresolved": 0,
+    "censored": false,
     "truncated": false
   },
   {
@@ -18,9 +21,12 @@
     "year": 2018,
     "seed_oa_status": "green",
     "seed_passable": true,
-    "world_size": 548,
-    "reachable": 149,
-    "walls": 399,
+    "world_size": 800,
+    "reachable": 200,
+    "reachable_beyond_seed": 199,
+    "walls": 563,
+    "unresolved": 37,
+    "censored": true,
     "truncated": true
   },
   {
@@ -30,9 +36,12 @@
     "year": 2026,
     "seed_oa_status": "hybrid",
     "seed_passable": true,
-    "world_size": 359,
-    "reachable": 61,
-    "walls": 298,
+    "world_size": 800,
+    "reachable": 143,
+    "reachable_beyond_seed": 142,
+    "walls": 629,
+    "unresolved": 28,
+    "censored": true,
     "truncated": true
   },
   {
@@ -44,7 +53,10 @@
     "seed_passable": false,
     "world_size": 1,
     "reachable": 0,
+    "reachable_beyond_seed": 0,
     "walls": 0,
+    "unresolved": 0,
+    "censored": false,
     "truncated": false
   },
   {
@@ -54,9 +66,12 @@
     "year": 2024,
     "seed_oa_status": "hybrid",
     "seed_passable": true,
-    "world_size": 401,
-    "reachable": 88,
-    "walls": 313,
+    "world_size": 800,
+    "reachable": 145,
+    "reachable_beyond_seed": 144,
+    "walls": 636,
+    "unresolved": 19,
+    "censored": true,
     "truncated": true
   },
   {
@@ -68,7 +83,10 @@
     "seed_passable": false,
     "world_size": 1,
     "reachable": 0,
+    "reachable_beyond_seed": 0,
     "walls": 0,
+    "unresolved": 0,
+    "censored": false,
     "truncated": false
   },
   {
@@ -80,7 +98,10 @@
     "seed_passable": false,
     "world_size": 1,
     "reachable": 0,
+    "reachable_beyond_seed": 0,
     "walls": 0,
+    "unresolved": 0,
+    "censored": false,
     "truncated": false
   },
   {
@@ -90,9 +111,12 @@
     "year": 2024,
     "seed_oa_status": "hybrid",
     "seed_passable": true,
-    "world_size": 555,
-    "reachable": 89,
-    "walls": 466,
+    "world_size": 800,
+    "reachable": 118,
+    "reachable_beyond_seed": 117,
+    "walls": 645,
+    "unresolved": 37,
+    "censored": true,
     "truncated": true
   },
   {
@@ -102,9 +126,12 @@
     "year": 2026,
     "seed_oa_status": "hybrid",
     "seed_passable": true,
-    "world_size": 325,
-    "reachable": 93,
-    "walls": 232,
+    "world_size": 800,
+    "reachable": 151,
+    "reachable_beyond_seed": 150,
+    "walls": 600,
+    "unresolved": 49,
+    "censored": true,
     "truncated": true
   },
   {
@@ -116,7 +143,10 @@
     "seed_passable": false,
     "world_size": 1,
     "reachable": 0,
+    "reachable_beyond_seed": 0,
     "walls": 0,
+    "unresolved": 0,
+    "censored": false,
     "truncated": false
   },
   {
@@ -128,7 +158,10 @@
     "seed_passable": false,
     "world_size": 1,
     "reachable": 0,
+    "reachable_beyond_seed": 0,
     "walls": 0,
+    "unresolved": 0,
+    "censored": false,
     "truncated": false
   },
   {
@@ -140,7 +173,10 @@
     "seed_passable": false,
     "world_size": 1,
     "reachable": 0,
+    "reachable_beyond_seed": 0,
     "walls": 0,
+    "unresolved": 0,
+    "censored": false,
     "truncated": false
   },
   {
@@ -152,7 +188,10 @@
     "seed_passable": false,
     "world_size": 1,
     "reachable": 0,
+    "reachable_beyond_seed": 0,
     "walls": 0,
+    "unresolved": 0,
+    "censored": false,
     "truncated": false
   },
   {
@@ -164,7 +203,10 @@
     "seed_passable": false,
     "world_size": 1,
     "reachable": 0,
+    "reachable_beyond_seed": 0,
     "walls": 0,
+    "unresolved": 0,
+    "censored": false,
     "truncated": false
   },
   {
@@ -174,10 +216,13 @@
     "year": 2019,
     "seed_oa_status": "green",
     "seed_passable": true,
-    "world_size": 598,
-    "reachable": 106,
-    "walls": 492,
-    "truncated": true
+    "world_size": 800,
+    "reachable": 134,
+    "reachable_beyond_seed": 133,
+    "walls": 632,
+    "unresolved": 34,
+    "censored": false,
+    "truncated": false
   },
   {
     "seed": "W4206531360",
@@ -188,7 +233,10 @@
     "seed_passable": false,
     "world_size": 1,
     "reachable": 0,
+    "reachable_beyond_seed": 0,
     "walls": 0,
+    "unresolved": 0,
+    "censored": false,
     "truncated": false
   },
   {
@@ -200,7 +248,10 @@
     "seed_passable": false,
     "world_size": 1,
     "reachable": 0,
+    "reachable_beyond_seed": 0,
     "walls": 0,
+    "unresolved": 0,
+    "censored": false,
     "truncated": false
   },
   {
@@ -210,9 +261,12 @@
     "year": 2015,
     "seed_oa_status": "green",
     "seed_passable": true,
-    "world_size": 352,
-    "reachable": 39,
-    "walls": 313,
+    "world_size": 800,
+    "reachable": 72,
+    "reachable_beyond_seed": 71,
+    "walls": 669,
+    "unresolved": 59,
+    "censored": true,
     "truncated": true
   },
   {
@@ -224,7 +278,10 @@
     "seed_passable": false,
     "world_size": 1,
     "reachable": 0,
+    "reachable_beyond_seed": 0,
     "walls": 0,
+    "unresolved": 0,
+    "censored": false,
     "truncated": false
   },
   {
@@ -236,7 +293,10 @@
     "seed_passable": false,
     "world_size": 1,
     "reachable": 0,
+    "reachable_beyond_seed": 0,
     "walls": 0,
+    "unresolved": 0,
+    "censored": false,
     "truncated": false
   },
   {
@@ -248,7 +308,10 @@
     "seed_passable": false,
     "world_size": 1,
     "reachable": 0,
+    "reachable_beyond_seed": 0,
     "walls": 0,
+    "unresolved": 0,
+    "censored": false,
     "truncated": false
   },
   {
@@ -258,9 +321,12 @@
     "year": 2021,
     "seed_oa_status": "green",
     "seed_passable": true,
-    "world_size": 402,
-    "reachable": 75,
-    "walls": 327,
+    "world_size": 800,
+    "reachable": 124,
+    "reachable_beyond_seed": 123,
+    "walls": 643,
+    "unresolved": 33,
+    "censored": true,
     "truncated": true
   },
   {
@@ -272,7 +338,10 @@
     "seed_passable": false,
     "world_size": 1,
     "reachable": 0,
+    "reachable_beyond_seed": 0,
     "walls": 0,
+    "unresolved": 0,
+    "censored": false,
     "truncated": false
   },
   {
@@ -284,7 +353,10 @@
     "seed_passable": false,
     "world_size": 1,
     "reachable": 0,
+    "reachable_beyond_seed": 0,
     "walls": 0,
+    "unresolved": 0,
+    "censored": false,
     "truncated": false
   },
   {
@@ -296,7 +368,10 @@
     "seed_passable": false,
     "world_size": 1,
     "reachable": 0,
+    "reachable_beyond_seed": 0,
     "walls": 0,
+    "unresolved": 0,
+    "censored": false,
     "truncated": false
   },
   {
@@ -306,10 +381,13 @@
     "year": 2019,
     "seed_oa_status": "green",
     "seed_passable": true,
-    "world_size": 488,
-    "reachable": 54,
-    "walls": 434,
-    "truncated": true
+    "world_size": 800,
+    "reachable": 105,
+    "reachable_beyond_seed": 104,
+    "walls": 642,
+    "unresolved": 53,
+    "censored": false,
+    "truncated": false
   },
   {
     "seed": "W2553745890",
@@ -320,7 +398,10 @@
     "seed_passable": false,
     "world_size": 1,
     "reachable": 0,
+    "reachable_beyond_seed": 0,
     "walls": 0,
+    "unresolved": 0,
+    "censored": false,
     "truncated": false
   },
   {
@@ -332,7 +413,10 @@
     "seed_passable": false,
     "world_size": 1,
     "reachable": 0,
+    "reachable_beyond_seed": 0,
     "walls": 0,
+    "unresolved": 0,
+    "censored": false,
     "truncated": false
   },
   {
@@ -344,7 +428,10 @@
     "seed_passable": false,
     "world_size": 1,
     "reachable": 0,
+    "reachable_beyond_seed": 0,
     "walls": 0,
+    "unresolved": 0,
+    "censored": false,
     "truncated": false
   },
   {
@@ -354,9 +441,12 @@
     "year": 2021,
     "seed_oa_status": "green",
     "seed_passable": true,
-    "world_size": 370,
-    "reachable": 105,
-    "walls": 265,
+    "world_size": 800,
+    "reachable": 231,
+    "reachable_beyond_seed": 230,
+    "walls": 546,
+    "unresolved": 23,
+    "censored": true,
     "truncated": true
   },
   {
@@ -368,7 +458,10 @@
     "seed_passable": false,
     "world_size": 1,
     "reachable": 0,
+    "reachable_beyond_seed": 0,
     "walls": 0,
+    "unresolved": 0,
+    "censored": false,
     "truncated": false
   },
   {
@@ -380,7 +473,10 @@
     "seed_passable": false,
     "world_size": 1,
     "reachable": 0,
+    "reachable_beyond_seed": 0,
     "walls": 0,
+    "unresolved": 0,
+    "censored": false,
     "truncated": false
   },
   {
@@ -390,10 +486,13 @@
     "year": 2021,
     "seed_oa_status": "green",
     "seed_passable": true,
-    "world_size": 492,
-    "reachable": 54,
-    "walls": 438,
-    "truncated": true
+    "world_size": 800,
+    "reachable": 123,
+    "reachable_beyond_seed": 122,
+    "walls": 606,
+    "unresolved": 71,
+    "censored": false,
+    "truncated": false
   },
   {
     "seed": "W2560553838",
@@ -402,9 +501,12 @@
     "year": 2016,
     "seed_oa_status": "hybrid",
     "seed_passable": true,
-    "world_size": 342,
-    "reachable": 27,
-    "walls": 315,
+    "world_size": 800,
+    "reachable": 67,
+    "reachable_beyond_seed": 66,
+    "walls": 658,
+    "unresolved": 75,
+    "censored": true,
     "truncated": true
   },
   {
@@ -414,10 +516,13 @@
     "year": 2015,
     "seed_oa_status": "green",
     "seed_passable": true,
-    "world_size": 527,
-    "reachable": 54,
-    "walls": 473,
-    "truncated": true
+    "world_size": 800,
+    "reachable": 107,
+    "reachable_beyond_seed": 106,
+    "walls": 628,
+    "unresolved": 65,
+    "censored": false,
+    "truncated": false
   },
   {
     "seed": "W7207634607",
@@ -428,7 +533,10 @@
     "seed_passable": false,
     "world_size": 1,
     "reachable": 0,
+    "reachable_beyond_seed": 0,
     "walls": 0,
+    "unresolved": 0,
+    "censored": false,
     "truncated": false
   },
   {
@@ -440,7 +548,10 @@
     "seed_passable": false,
     "world_size": 1,
     "reachable": 0,
+    "reachable_beyond_seed": 0,
     "walls": 0,
+    "unresolved": 0,
+    "censored": false,
     "truncated": false
   },
   {
@@ -452,7 +563,10 @@
     "seed_passable": false,
     "world_size": 1,
     "reachable": 0,
+    "reachable_beyond_seed": 0,
     "walls": 0,
+    "unresolved": 0,
+    "censored": false,
     "truncated": false
   },
   {
@@ -464,7 +578,10 @@
     "seed_passable": false,
     "world_size": 1,
     "reachable": 0,
+    "reachable_beyond_seed": 0,
     "walls": 0,
+    "unresolved": 0,
+    "censored": false,
     "truncated": false
   },
   {
@@ -476,7 +593,10 @@
     "seed_passable": false,
     "world_size": 1,
     "reachable": 0,
+    "reachable_beyond_seed": 0,
     "walls": 0,
+    "unresolved": 0,
+    "censored": false,
     "truncated": false
   },
   {
@@ -488,7 +608,10 @@
     "seed_passable": false,
     "world_size": 1,
     "reachable": 0,
+    "reachable_beyond_seed": 0,
     "walls": 0,
+    "unresolved": 0,
+    "censored": false,
     "truncated": false
   },
   {
@@ -500,7 +623,10 @@
     "seed_passable": false,
     "world_size": 1,
     "reachable": 0,
+    "reachable_beyond_seed": 0,
     "walls": 0,
+    "unresolved": 0,
+    "censored": false,
     "truncated": false
   },
   {
@@ -512,7 +638,10 @@
     "seed_passable": false,
     "world_size": 1,
     "reachable": 0,
+    "reachable_beyond_seed": 0,
     "walls": 0,
+    "unresolved": 0,
+    "censored": false,
     "truncated": false
   },
   {
@@ -524,7 +653,10 @@
     "seed_passable": false,
     "world_size": 1,
     "reachable": 0,
+    "reachable_beyond_seed": 0,
     "walls": 0,
+    "unresolved": 0,
+    "censored": false,
     "truncated": false
   },
   {
@@ -534,9 +666,12 @@
     "year": 2025,
     "seed_oa_status": "hybrid",
     "seed_passable": true,
-    "world_size": 336,
-    "reachable": 87,
-    "walls": 249,
+    "world_size": 800,
+    "reachable": 185,
+    "reachable_beyond_seed": 184,
+    "walls": 583,
+    "unresolved": 32,
+    "censored": true,
     "truncated": true
   },
   {
@@ -548,7 +683,10 @@
     "seed_passable": false,
     "world_size": 1,
     "reachable": 0,
+    "reachable_beyond_seed": 0,
     "walls": 0,
+    "unresolved": 0,
+    "censored": false,
     "truncated": false
   },
   {
@@ -560,7 +698,10 @@
     "seed_passable": false,
     "world_size": 1,
     "reachable": 0,
+    "reachable_beyond_seed": 0,
     "walls": 0,
+    "unresolved": 0,
+    "censored": false,
     "truncated": false
   },
   {
@@ -572,7 +713,10 @@
     "seed_passable": false,
     "world_size": 1,
     "reachable": 0,
+    "reachable_beyond_seed": 0,
     "walls": 0,
+    "unresolved": 0,
+    "censored": false,
     "truncated": false
   },
   {
@@ -582,9 +726,12 @@
     "year": 2019,
     "seed_oa_status": "green",
     "seed_passable": true,
-    "world_size": 142,
+    "world_size": 100,
     "reachable": 6,
-    "walls": 136,
+    "reachable_beyond_seed": 5,
+    "walls": 90,
+    "unresolved": 4,
+    "censored": false,
     "truncated": false
   },
   {
@@ -596,7 +743,10 @@
     "seed_passable": false,
     "world_size": 1,
     "reachable": 0,
+    "reachable_beyond_seed": 0,
     "walls": 0,
+    "unresolved": 0,
+    "censored": false,
     "truncated": false
   },
   {
@@ -608,7 +758,10 @@
     "seed_passable": false,
     "world_size": 1,
     "reachable": 0,
+    "reachable_beyond_seed": 0,
     "walls": 0,
+    "unresolved": 0,
+    "censored": false,
     "truncated": false
   },
   {
@@ -620,7 +773,10 @@
     "seed_passable": false,
     "world_size": 1,
     "reachable": 0,
+    "reachable_beyond_seed": 0,
     "walls": 0,
+    "unresolved": 0,
+    "censored": false,
     "truncated": false
   },
   {
@@ -630,9 +786,12 @@
     "year": 2019,
     "seed_oa_status": "hybrid",
     "seed_passable": true,
-    "world_size": 387,
-    "reachable": 83,
-    "walls": 304,
+    "world_size": 800,
+    "reachable": 177,
+    "reachable_beyond_seed": 176,
+    "walls": 602,
+    "unresolved": 21,
+    "censored": true,
     "truncated": true
   },
   {
@@ -642,9 +801,12 @@
     "year": 2022,
     "seed_oa_status": "hybrid",
     "seed_passable": true,
-    "world_size": 343,
-    "reachable": 72,
-    "walls": 271,
+    "world_size": 800,
+    "reachable": 133,
+    "reachable_beyond_seed": 132,
+    "walls": 597,
+    "unresolved": 70,
+    "censored": true,
     "truncated": true
   },
   {
@@ -656,7 +818,10 @@
     "seed_passable": false,
     "world_size": 1,
     "reachable": 0,
+    "reachable_beyond_seed": 0,
     "walls": 0,
+    "unresolved": 0,
+    "censored": false,
     "truncated": false
   },
   {
@@ -668,7 +833,10 @@
     "seed_passable": false,
     "world_size": 1,
     "reachable": 0,
+    "reachable_beyond_seed": 0,
     "walls": 0,
+    "unresolved": 0,
+    "censored": false,
     "truncated": false
   },
   {
@@ -680,7 +848,10 @@
     "seed_passable": false,
     "world_size": 1,
     "reachable": 0,
+    "reachable_beyond_seed": 0,
     "walls": 0,
+    "unresolved": 0,
+    "censored": false,
     "truncated": false
   },
   {
@@ -692,7 +863,10 @@
     "seed_passable": false,
     "world_size": 1,
     "reachable": 0,
+    "reachable_beyond_seed": 0,
     "walls": 0,
+    "unresolved": 0,
+    "censored": false,
     "truncated": false
   },
   {
@@ -704,7 +878,10 @@
     "seed_passable": false,
     "world_size": 1,
     "reachable": 0,
+    "reachable_beyond_seed": 0,
     "walls": 0,
+    "unresolved": 0,
+    "censored": false,
     "truncated": false
   },
   {
@@ -714,9 +891,12 @@
     "year": 2017,
     "seed_oa_status": "green",
     "seed_passable": true,
-    "world_size": 341,
-    "reachable": 59,
-    "walls": 282,
+    "world_size": 800,
+    "reachable": 97,
+    "reachable_beyond_seed": 96,
+    "walls": 676,
+    "unresolved": 27,
+    "censored": true,
     "truncated": true
   },
   {
@@ -728,7 +908,10 @@
     "seed_passable": false,
     "world_size": 1,
     "reachable": 0,
+    "reachable_beyond_seed": 0,
     "walls": 0,
+    "unresolved": 0,
+    "censored": false,
     "truncated": false
   },
   {
@@ -740,7 +923,10 @@
     "seed_passable": false,
     "world_size": 1,
     "reachable": 0,
+    "reachable_beyond_seed": 0,
     "walls": 0,
+    "unresolved": 0,
+    "censored": false,
     "truncated": false
   },
   {
@@ -752,7 +938,10 @@
     "seed_passable": false,
     "world_size": 1,
     "reachable": 0,
+    "reachable_beyond_seed": 0,
     "walls": 0,
+    "unresolved": 0,
+    "censored": false,
     "truncated": false
   },
   {
@@ -762,9 +951,12 @@
     "year": 2022,
     "seed_oa_status": "green",
     "seed_passable": true,
-    "world_size": 370,
-    "reachable": 57,
-    "walls": 313,
+    "world_size": 800,
+    "reachable": 158,
+    "reachable_beyond_seed": 157,
+    "walls": 613,
+    "unresolved": 29,
+    "censored": true,
     "truncated": true
   },
   {
@@ -776,7 +968,10 @@
     "seed_passable": false,
     "world_size": 1,
     "reachable": 0,
+    "reachable_beyond_seed": 0,
     "walls": 0,
+    "unresolved": 0,
+    "censored": false,
     "truncated": false
   },
   {
@@ -788,7 +983,10 @@
     "seed_passable": false,
     "world_size": 1,
     "reachable": 0,
+    "reachable_beyond_seed": 0,
     "walls": 0,
+    "unresolved": 0,
+    "censored": false,
     "truncated": false
   },
   {
@@ -800,7 +998,10 @@
     "seed_passable": false,
     "world_size": 1,
     "reachable": 0,
+    "reachable_beyond_seed": 0,
     "walls": 0,
+    "unresolved": 0,
+    "censored": false,
     "truncated": false
   },
   {
@@ -812,7 +1013,10 @@
     "seed_passable": false,
     "world_size": 1,
     "reachable": 0,
+    "reachable_beyond_seed": 0,
     "walls": 0,
+    "unresolved": 0,
+    "censored": false,
     "truncated": false
   },
   {
@@ -824,7 +1028,10 @@
     "seed_passable": false,
     "world_size": 1,
     "reachable": 0,
+    "reachable_beyond_seed": 0,
     "walls": 0,
+    "unresolved": 0,
+    "censored": false,
     "truncated": false
   },
   {
@@ -836,7 +1043,10 @@
     "seed_passable": false,
     "world_size": 1,
     "reachable": 0,
+    "reachable_beyond_seed": 0,
     "walls": 0,
+    "unresolved": 0,
+    "censored": false,
     "truncated": false
   },
   {
@@ -848,7 +1058,10 @@
     "seed_passable": false,
     "world_size": 1,
     "reachable": 0,
+    "reachable_beyond_seed": 0,
     "walls": 0,
+    "unresolved": 0,
+    "censored": false,
     "truncated": false
   },
   {
@@ -860,7 +1073,10 @@
     "seed_passable": false,
     "world_size": 1,
     "reachable": 0,
+    "reachable_beyond_seed": 0,
     "walls": 0,
+    "unresolved": 0,
+    "censored": false,
     "truncated": false
   },
   {
@@ -870,9 +1086,12 @@
     "year": 2021,
     "seed_oa_status": "green",
     "seed_passable": true,
-    "world_size": 300,
-    "reachable": 48,
-    "walls": 252,
+    "world_size": 800,
+    "reachable": 159,
+    "reachable_beyond_seed": 158,
+    "walls": 626,
+    "unresolved": 15,
+    "censored": true,
     "truncated": true
   },
   {
@@ -884,7 +1103,10 @@
     "seed_passable": false,
     "world_size": 1,
     "reachable": 0,
+    "reachable_beyond_seed": 0,
     "walls": 0,
+    "unresolved": 0,
+    "censored": false,
     "truncated": false
   },
   {
@@ -896,7 +1118,10 @@
     "seed_passable": false,
     "world_size": 1,
     "reachable": 0,
+    "reachable_beyond_seed": 0,
     "walls": 0,
+    "unresolved": 0,
+    "censored": false,
     "truncated": false
   },
   {
@@ -908,7 +1133,10 @@
     "seed_passable": false,
     "world_size": 1,
     "reachable": 0,
+    "reachable_beyond_seed": 0,
     "walls": 0,
+    "unresolved": 0,
+    "censored": false,
     "truncated": false
   },
   {
@@ -918,9 +1146,12 @@
     "year": 2022,
     "seed_oa_status": "hybrid",
     "seed_passable": true,
-    "world_size": 373,
-    "reachable": 66,
-    "walls": 307,
+    "world_size": 800,
+    "reachable": 178,
+    "reachable_beyond_seed": 177,
+    "walls": 611,
+    "unresolved": 11,
+    "censored": true,
     "truncated": true
   },
   {
@@ -932,7 +1163,10 @@
     "seed_passable": false,
     "world_size": 1,
     "reachable": 0,
+    "reachable_beyond_seed": 0,
     "walls": 0,
+    "unresolved": 0,
+    "censored": false,
     "truncated": false
   },
   {
@@ -944,7 +1178,10 @@
     "seed_passable": false,
     "world_size": 1,
     "reachable": 0,
+    "reachable_beyond_seed": 0,
     "walls": 0,
+    "unresolved": 0,
+    "censored": false,
     "truncated": false
   },
   {
@@ -956,7 +1193,10 @@
     "seed_passable": false,
     "world_size": 1,
     "reachable": 0,
+    "reachable_beyond_seed": 0,
     "walls": 0,
+    "unresolved": 0,
+    "censored": false,
     "truncated": false
   },
   {
@@ -968,7 +1208,10 @@
     "seed_passable": false,
     "world_size": 1,
     "reachable": 0,
+    "reachable_beyond_seed": 0,
     "walls": 0,
+    "unresolved": 0,
+    "censored": false,
     "truncated": false
   },
   {
@@ -980,7 +1223,10 @@
     "seed_passable": false,
     "world_size": 1,
     "reachable": 0,
+    "reachable_beyond_seed": 0,
     "walls": 0,
+    "unresolved": 0,
+    "censored": false,
     "truncated": false
   },
   {
@@ -992,7 +1238,10 @@
     "seed_passable": false,
     "world_size": 1,
     "reachable": 0,
+    "reachable_beyond_seed": 0,
     "walls": 0,
+    "unresolved": 0,
+    "censored": false,
     "truncated": false
   },
   {
@@ -1004,7 +1253,10 @@
     "seed_passable": false,
     "world_size": 1,
     "reachable": 0,
+    "reachable_beyond_seed": 0,
     "walls": 0,
+    "unresolved": 0,
+    "censored": false,
     "truncated": false
   },
   {
@@ -1016,7 +1268,10 @@
     "seed_passable": false,
     "world_size": 1,
     "reachable": 0,
+    "reachable_beyond_seed": 0,
     "walls": 0,
+    "unresolved": 0,
+    "censored": false,
     "truncated": false
   },
   {
@@ -1028,7 +1283,10 @@
     "seed_passable": false,
     "world_size": 1,
     "reachable": 0,
+    "reachable_beyond_seed": 0,
     "walls": 0,
+    "unresolved": 0,
+    "censored": false,
     "truncated": false
   },
   {
@@ -1040,7 +1298,10 @@
     "seed_passable": false,
     "world_size": 1,
     "reachable": 0,
+    "reachable_beyond_seed": 0,
     "walls": 0,
+    "unresolved": 0,
+    "censored": false,
     "truncated": false
   },
   {
@@ -1050,9 +1311,12 @@
     "year": 2025,
     "seed_oa_status": "hybrid",
     "seed_passable": true,
-    "world_size": 358,
-    "reachable": 70,
-    "walls": 288,
+    "world_size": 800,
+    "reachable": 186,
+    "reachable_beyond_seed": 185,
+    "walls": 515,
+    "unresolved": 99,
+    "censored": true,
     "truncated": true
   },
   {
@@ -1062,9 +1326,12 @@
     "year": 2020,
     "seed_oa_status": "green",
     "seed_passable": true,
-    "world_size": 579,
-    "reachable": 95,
-    "walls": 484,
+    "world_size": 800,
+    "reachable": 123,
+    "reachable_beyond_seed": 122,
+    "walls": 625,
+    "unresolved": 52,
+    "censored": true,
     "truncated": true
   },
   {
@@ -1076,7 +1343,10 @@
     "seed_passable": false,
     "world_size": 1,
     "reachable": 0,
+    "reachable_beyond_seed": 0,
     "walls": 0,
+    "unresolved": 0,
+    "censored": false,
     "truncated": false
   },
   {
@@ -1088,7 +1358,10 @@
     "seed_passable": false,
     "world_size": 1,
     "reachable": 0,
+    "reachable_beyond_seed": 0,
     "walls": 0,
+    "unresolved": 0,
+    "censored": false,
     "truncated": false
   },
   {
@@ -1100,7 +1373,10 @@
     "seed_passable": false,
     "world_size": 1,
     "reachable": 0,
+    "reachable_beyond_seed": 0,
     "walls": 0,
+    "unresolved": 0,
+    "censored": false,
     "truncated": false
   },
   {
@@ -1110,9 +1386,12 @@
     "year": 2023,
     "seed_oa_status": "green",
     "seed_passable": true,
-    "world_size": 337,
-    "reachable": 50,
-    "walls": 287,
+    "world_size": 800,
+    "reachable": 154,
+    "reachable_beyond_seed": 153,
+    "walls": 628,
+    "unresolved": 18,
+    "censored": true,
     "truncated": true
   },
   {
@@ -1124,7 +1403,10 @@
     "seed_passable": false,
     "world_size": 1,
     "reachable": 0,
+    "reachable_beyond_seed": 0,
     "walls": 0,
+    "unresolved": 0,
+    "censored": false,
     "truncated": false
   },
   {
@@ -1136,7 +1418,10 @@
     "seed_passable": false,
     "world_size": 1,
     "reachable": 0,
+    "reachable_beyond_seed": 0,
     "walls": 0,
+    "unresolved": 0,
+    "censored": false,
     "truncated": false
   },
   {
@@ -1148,7 +1433,10 @@
     "seed_passable": false,
     "world_size": 1,
     "reachable": 0,
+    "reachable_beyond_seed": 0,
     "walls": 0,
+    "unresolved": 0,
+    "censored": false,
     "truncated": false
   },
   {
@@ -1160,7 +1448,10 @@
     "seed_passable": false,
     "world_size": 1,
     "reachable": 0,
+    "reachable_beyond_seed": 0,
     "walls": 0,
+    "unresolved": 0,
+    "censored": false,
     "truncated": false
   },
   {
@@ -1170,9 +1461,12 @@
     "year": 2022,
     "seed_oa_status": "hybrid",
     "seed_passable": true,
-    "world_size": 351,
-    "reachable": 90,
-    "walls": 261,
+    "world_size": 800,
+    "reachable": 281,
+    "reachable_beyond_seed": 280,
+    "walls": 453,
+    "unresolved": 66,
+    "censored": true,
     "truncated": true
   },
   {
@@ -1184,7 +1478,10 @@
     "seed_passable": false,
     "world_size": 1,
     "reachable": 0,
+    "reachable_beyond_seed": 0,
     "walls": 0,
+    "unresolved": 0,
+    "censored": false,
     "truncated": false
   },
   {
@@ -1196,7 +1493,10 @@
     "seed_passable": false,
     "world_size": 1,
     "reachable": 0,
+    "reachable_beyond_seed": 0,
     "walls": 0,
+    "unresolved": 0,
+    "censored": false,
     "truncated": false
   }
 ]

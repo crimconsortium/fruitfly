@@ -1,4 +1,58 @@
 {
+  "definitions": {
+    "reachable": "passable papers entered, including the seed itself",
+    "reachable_beyond_seed": "reachable minus one",
+    "walls": "papers confirmed not passable",
+    "unresolved": "papers we could not look up; never counted as walls",
+    "censored": "crawl hit the 800-paper cap; reachable is a lower bound, seed status is still known"
+  },
+  "seed_access": {
+    "denominator": "all seeds, including censored crawls",
+    "n_seeds": 100,
+    "n_blocked_at_seed": 75,
+    "n_open_at_seed": 25,
+    "share_blocked_at_seed": 0.75,
+    "seed_status_counts": {
+      "closed": 73,
+      "green": 14,
+      "hybrid": 11,
+      "bronze": 2
+    }
+  },
+  "crawl_size": {
+    "cap": 800,
+    "n_complete": 80,
+    "n_censored": 20,
+    "share_of_open_seeds_censored": 0.8,
+    "complete_crawls_only": {
+      "median_reachable_beyond_seed": 0.0,
+      "mean_reachable_beyond_seed": 5.875,
+      "max_reachable_beyond_seed": 133.0,
+      "median_walls": 0.0,
+      "max_walls": 642.0
+    },
+    "censored_crawls_note": "20 crawls reached the cap of 800 papers and were stopped. Their reachable totals are lower bounds and are excluded from crawl-size averages only."
+  },
+  "papers": {
+    "n_papers": 18444,
+    "oa_status_counts": {
+      "closed": 14293,
+      "green": 2211,
+      "bronze": 822,
+      "gold": 427,
+      "diamond": 208,
+      "hybrid": 387,
+      "unresolved": 1027
+    },
+    "unresolved_share": 0.0557,
+    "share_open_of_resolved": 0.1762,
+    "share_open_of_resolved_with_bronze": 0.221
+  },
+  "api": {
+    "cache_hits": 873,
+    "batches_attempted": 401,
+    "cache_size": 17475
+  },
   "policy": {
     "open_statuses": [
       "diamond",
@@ -26,20 +80,10 @@
   "citations_config": {
     "n_seeds": 100,
     "rng_seed": 20260911,
-    "max_nodes_per_seed": 300,
-    "max_depth": 8,
+    "max_nodes_per_seed": 800,
+    "max_depth": 4,
     "follow": "references",
     "batch_size": 50
-  },
-  "n_seeds": 100,
-  "n_truncated": 24,
-  "n_papers": 9722,
-  "headline": {
-    "median_reachable": 0.0,
-    "mean_reachable": 0.07894736842105263,
-    "median_walls": 0.0,
-    "share_seeds_stuck_immediately": 0.9868421052631579,
-    "share_seeds_paywalled": 0.9868421052631579
   },
   "attribution": "Bibliographic metadata from OpenAlex (CC0)."
 }
