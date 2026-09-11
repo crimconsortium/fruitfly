@@ -7,6 +7,10 @@ readout values recorded at each decision, and nothing else.
 Layout is a deterministic spring layout seeded from the trace, so the same trace always
 produces the same video.
 
+Calibration is read through src/calib.py. Run #4 died here on a direct index into
+calib['selectivity_shuffled'] after that field was renamed; nothing in this file
+indexes calibration any more.
+
   python src/render.py --trace data/traces/W123.json
 
 Outputs: site/fly.mp4, site/fly.gif, site/stats.json
@@ -20,6 +24,8 @@ from pathlib import Path
 import imageio.v2 as imageio
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
+
+from calib import summary_line
 
 ROOT = Path(__file__).resolve().parent.parent
 SITE = ROOT / "site"
@@ -188,6 +194,7 @@ def main() -> None:
         for b in s["bumps"]:
             edge_pairs.append((s["at"], b))
     trace["_edges"] = list(dict.fromkeys(edge_pairs))
+    trace["_walls_so_far"] = 0
     pos = layout(trace["nodes"], trace["_edges"], trace["engine"]["rng_seed"])
 
     calib = trace.get("calibration") or {}
@@ -217,17 +224,14 @@ def main() -> None:
         for f in range(per_step):
             t = f / per_step
             xy = (a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t)
-            img = panel_frame(trace, pos, visited, xy, set(s["bumps"]) if f < per_step // 2 else set(),
+            img = panel_frame(trace, pos, visited, xy,
+                              set(s["bumps"]) if f < per_step // 2 else set(),
                               s, (f // 3) % 2 == 0, subtitle)
             frames.append(np.asarray(img))
         visited.add(s["to"])
 
     r = trace["result"]
-    sel = ""
-    if calib:
-        sel = (f"channel selectivity {calib['selectivity_real']:.0%} vs "
-               f"shuffled-connectome control {calib['selectivity_shuffled']:.0%} "
-               f"(chance {calib['chance_level']:.0%})")
+    sel = summary_line(calib)
     end = card([
         (f"{r['reachable']} papers reached", F_BIG, WHITE),
         (f"{r['walls_hit']} paywalls hit", F_BIG, ORANGE),
@@ -248,6 +252,7 @@ def main() -> None:
 
     (SITE / "stats.json").write_text(json.dumps({
         "seed": seed, "result": r, "calibration": calib,
+        "calibration_line": sel,
         "policy": trace["policy"], "engine": trace["engine"],
     }, indent=2))
 

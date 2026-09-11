@@ -58,10 +58,9 @@
 
   <h2>We did not choose the journals</h2>
   <p>The corpus is the Web of Science research area <strong>Criminology &amp; Penology</strong>,
-  adopted as-is &mdash; 53 journals, no additions, no removals. <em>European Journal of
-  Criminology</em> and <em>Crime Science</em> are not in it. That is Clarivate's boundary, not ours.
-  The authoritative version of that list is available only to Web of Science subscribers: the
-  conventional definition of criminology is itself paywalled.</p>
+  adopted as-is. <em>European Journal of Criminology</em> and <em>Crime Science</em> are not in it.
+  That is Clarivate's boundary, not ours. The authoritative version of that list is available only
+  to Web of Science subscribers: the conventional definition of criminology is itself paywalled.</p>
 
   <h2>What counts as open</h2>
   <table>
@@ -79,10 +78,18 @@
   <h2>We checked whether the brain mattered</h2>
   <div class="null" id="control">
     <p>Most of the fly-brain demos going around do not run a control. We did: the whole pipeline
-    was rebuilt on a degree-preserving shuffle of the same connectome, and we compared how well the
-    readout identifies which input channel was driven.</p>
+    was rebuilt on degree-preserving shuffles of the same connectome, and we compared how well the
+    readout identifies which input channel was driven. One shuffle would be an anecdote, so we run
+    several and compare against their spread.</p>
     <p id="control-numbers"></p>
   </div>
+
+  <h2>Corrections</h2>
+  <p>An earlier run of this pipeline reported that 99% of seed papers were paywalled. That was
+  wrong; the figure is 75%. Twenty-five of 100 seeds were open, but 24 of those hit the crawl's
+  compute cap and were then excluded from the headline, leaving 75 blocked and 1 open. Hitting a
+  compute cap says nothing about whether a paper was readable. Seed-level statistics now use every
+  seed, and a regression test fails if that ever changes back.</p>
 
   <h2>Everything is open</h2>
   <p>Code, data, the full trace, and the negative control:
@@ -98,19 +105,35 @@
 </div>
 <script>
 fetch('stats.json').then(r => r.json()).then(s => {
-  const r = s.result, c = s.calibration || {};
+  const r = s.result || {}, c = s.calibration || {};
+  const pct = x => (x === null || x === undefined) ? 'n/a' : (x * 100).toFixed(0) + '%';
   document.getElementById('stats').innerHTML = [
     ['papers reached', r.reachable],
     ['paywalls hit', r.walls_hit],
     ['moves', r.n_steps],
-    ['neurons simulated', (s.engine.neurons || 0).toLocaleString()]
+    ['neurons simulated', ((s.engine || {}).neurons || 0).toLocaleString()]
   ].map(([k, v]) => `<div class="stat"><b>${v}</b><span>${k}</span></div>`).join('');
-  if (c.selectivity_real !== undefined) {
-    const pct = x => (x * 100).toFixed(0) + '%';
-    document.getElementById('control-numbers').innerHTML =
-      `Real connectome: <strong>${pct(c.selectivity_real)}</strong>. ` +
-      `Shuffled control: <strong>${pct(c.selectivity_shuffled)}</strong>. ` +
-      `Chance: ${pct(c.chance_level)}.<br>${c.verdict || ''}`;
+
+  // Tolerate both calibration formats: selectivity_shuffled_mean (with replicates)
+  // and the older single selectivity_shuffled.
+  const shuffled = (c.selectivity_shuffled_mean !== undefined && c.selectivity_shuffled_mean !== null)
+    ? c.selectivity_shuffled_mean : c.selectivity_shuffled;
+  const reps = c.selectivity_shuffled_replicates || [];
+  const nReps = c.n_shuffle_replicates || reps.length || 0;
+  const el = document.getElementById('control-numbers');
+  if (c.selectivity_real === undefined || c.selectivity_real === null) {
+    el.textContent = 'No calibration was recorded for this run.';
+  } else {
+    let html = `Real connectome: <strong>${pct(c.selectivity_real)}</strong>. `;
+    if (shuffled !== undefined && shuffled !== null) {
+      html += `Shuffled control: <strong>${pct(shuffled)}</strong>`;
+      if (nReps > 1) html += ` (mean of ${nReps}, sd ${pct(c.selectivity_shuffled_sd)})`;
+      html += '. ';
+    }
+    html += `Chance: ${pct(c.chance_level)}.`;
+    if (reps.length) html += `<br>Replicates: ${reps.map(pct).join(', ')}.`;
+    if (c.verdict) html += `<br>${c.verdict}`;
+    el.innerHTML = html;
   }
 });
 </script>
