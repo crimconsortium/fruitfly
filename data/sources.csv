@@ -1,0 +1,54 @@
+wos_name,matched_name,match_score,review_flag,openalex_id,issn_l,asserted_issn_l,is_oa,is_in_doaj,apc_usd,works_total,open_share,open_share_with_bronze,n_diamond,n_gold,n_green,n_hybrid,n_bronze,n_closed
+AGGRESSION AND VIOLENT BEHAVIOR,Aggression and Violent Behavior,1.0,OK,https://openalex.org/S80014870,1359-1789,,False,False,3880,1070,0.2636,0.2981,0,3,139,140,37,751
+AMERICAN JOURNAL OF CRIMINAL JUSTICE,American Journal of Criminal Justice,1.0,OK,https://openalex.org/S120133624,1066-2316,,False,False,3090,644,0.1863,0.295,0,0,24,96,70,454
+ASIAN JOURNAL OF CRIMINOLOGY,Asian Journal of Criminology,1.0,OK,https://openalex.org/S27502815,1871-0131,,False,False,3190,307,0.1661,0.2313,0,0,12,39,20,236
+AUSTRALIAN AND NEW ZEALAND JOURNAL OF CRIMINOLOGY,Australian & New Zealand Journal of Criminology,1.0,OK,https://openalex.org/S179701344,0004-8658,,False,False,3650,229,0.1878,0.2445,0,1,39,3,13,173
+BRITISH JOURNAL OF CRIMINOLOGY,The British Journal of Criminology,1.0,OK,https://openalex.org/S27273401,0007-0955,,False,False,5341,1224,0.4248,0.5049,0,1,140,379,98,606
+CANADIAN JOURNAL OF CRIMINOLOGY AND CRIMINAL JUSTICE,Canadian Journal of Criminology,1.0,OK,https://openalex.org/S4210227121,0704-9722,,False,False,,0,,,0,0,0,0,0,0
+CRIME & DELINQUENCY,Crime & Delinquency,1.0,OK,https://openalex.org/S75692751,0011-1287,,False,False,3650,1213,0.1979,0.2547,0,0,78,162,69,904
+"CRIME AND JUSTICE: A REVIEW OF RESEARCH, VOL 20",Crime and Justice,1.0,OK,https://openalex.org/S191292005,0192-3234,,False,False,,151,0.1921,0.2781,0,0,15,14,13,109
+CRIME LAW AND SOCIAL CHANGE,Crime Law and Social Change,1.0,OK,https://openalex.org/S170408770,0378-1100,,False,False,3490,739,0.3248,0.3897,0,0,54,186,48,451
+CRIMINAL JUSTICE AND BEHAVIOR,Criminal Justice and Behavior,1.0,OK,https://openalex.org/S74425203,0093-8548,,False,False,3650,1080,0.2417,0.3037,0,0,110,151,67,752
+CRIMINOLOGY,Criminology,1.0,OK,https://openalex.org/S67613863,0011-1384,0011-1384,False,False,3570,607,0.2768,0.3361,0,0,31,137,36,403
+CRIMINOLOGY & PUBLIC POLICY,Criminology & Public Policy,1.0,OK,https://openalex.org/S2764941010,1538-6473,,False,False,3350,667,0.2009,0.2714,0,0,19,115,47,486
+CRITICAL CRIMINOLOGY,Critical Criminology,1.0,OK,https://openalex.org/S4671545,0847-2971,,False,False,3390,636,0.3318,0.4607,0,1,40,170,82,343
+DEVIANT BEHAVIOR,Deviant Behavior,1.0,OK,https://openalex.org/S113184965,0163-9625,,False,False,,1516,0.2276,0.2447,0,5,159,181,26,1145
+EUROPEAN JOURNAL ON CRIMINAL POLICY AND RESEARCH,European Journal on Criminal Policy and Research,1.0,OK,https://openalex.org/S146174905,0928-1371,,False,False,2190,418,0.5359,0.6077,0,3,23,198,30,164
+GLOBAL CRIME,Global Crime,1.0,OK,https://openalex.org/S189157259,1744-0572,,False,False,,231,0.3377,0.3766,0,1,29,48,9,144
+HOMICIDE STUDIES,Homicide Studies,1.0,OK,https://openalex.org/S144311452,1088-7679,,False,False,3650,243,0.2222,0.2716,0,0,18,36,12,177
+INTERNATIONAL CRIMINAL JUSTICE REVIEW,International Criminal Justice Review,1.0,OK,https://openalex.org/S117214891,1057-5677,,False,False,3400,518,0.1699,0.2181,0,1,36,51,25,405
+INTERNATIONAL JOURNAL FOR CRIME JUSTICE AND SOCIAL DEMOCRACY,International Journal for Crime Justice and Social Democracy,1.0,OK,https://openalex.org/S2738560774,2202-7998,,True,True,,618,1.0,1.0,613,0,5,0,0,0
+INTERNATIONAL JOURNAL OF COMPARATIVE AND APPLIED CRIMINAL JUSTICE,International Journal of Comparative and Applied Criminal Justice,1.0,OK,https://openalex.org/S2764600129,0192-4036,,False,False,,284,0.2289,0.2746,0,0,22,43,13,206
+INTERNATIONAL JOURNAL OF OFFENDER THERAPY AND COMPARATIVE CRIMINOLOGY,International Journal of Offender Therapy and Comparative Criminology,1.0,OK,https://openalex.org/S140831787,0020-7497,,False,False,3650,1258,0.2727,0.3227,0,1,163,179,63,852
+JOURNAL OF AGGRESSION MALTREATMENT & TRAUMA,Journal of Aggression Maltreatment & Trauma,1.0,OK,https://openalex.org/S11935491,1092-6771,,False,False,,1007,0.1936,0.2036,0,1,125,69,10,802
+JOURNAL OF CRIMINAL JUSTICE,Journal of Criminal Justice,1.0,OK,https://openalex.org/S140176541,0047-2352,,False,False,3930,1140,0.2982,0.3088,0,0,116,224,12,788
+JOURNAL OF CRIMINAL JUSTICE EDUCATION,Journal of Criminal Justice Education,1.0,OK,https://openalex.org/S10689036,1051-1253,1051-1253,False,False,,601,0.1198,0.1398,0,0,21,51,12,517
+JOURNAL OF CRIMINAL LAW & CRIMINOLOGY,The Journal of Criminal Law and Criminology (1973-),1.0,OK,https://openalex.org/S66810094,0091-4169,,False,False,,26,0.0,0.0,0,0,0,0,0,26
+JOURNAL OF DEVELOPMENTAL AND LIFE-COURSE CRIMINOLOGY,Journal of Developmental and Life-Course Criminology,1.0,OK,https://openalex.org/S4210177552,2199-4641,,False,False,3390,318,0.3648,0.544,0,0,29,87,57,145
+JOURNAL OF ETHNICITY IN CRIMINAL JUSTICE,Journal of Ethnicity in Criminal Justice,1.0,OK,https://openalex.org/S79077708,1537-7938,,False,False,,199,0.0704,0.0854,0,0,11,3,3,182
+JOURNAL OF EXPERIMENTAL CRIMINOLOGY,Journal of Experimental Criminology,1.0,OK,https://openalex.org/S19400458,1572-8315,,False,False,3090,550,0.4164,0.4727,0,1,35,193,31,290
+JOURNAL OF FORENSIC PSYCHIATRY & PSYCHOLOGY,Journal of Forensic Psychiatry and Psychology,1.0,OK,https://openalex.org/S64079723,1478-9949,,False,False,,614,0.3208,0.3371,0,2,90,105,10,407
+JOURNAL OF INTERPERSONAL VIOLENCE,Journal of Interpersonal Violence,1.0,OK,https://openalex.org/S45333638,0886-2605,,False,False,3900,4872,0.2849,0.3385,0,3,787,598,261,3223
+JOURNAL OF INVESTIGATIVE PSYCHOLOGY AND OFFENDER PROFILING,Journal of Investigative Psychology and Offender Profiling,1.0,OK,https://openalex.org/S177334458,1544-4759,,False,False,2900,276,0.3225,0.4819,0,0,34,55,44,143
+JOURNAL OF QUANTITATIVE CRIMINOLOGY,Journal of Quantitative Criminology,1.0,OK,https://openalex.org/S25809236,0748-4518,,False,False,4090,438,0.3995,0.4612,0,0,36,139,27,236
+JOURNAL OF RESEARCH IN CRIME AND DELINQUENCY,Journal of Research in Crime and Delinquency,1.0,OK,https://openalex.org/S173027916,0022-4278,,False,False,3650,281,0.2206,0.274,0,0,36,26,15,204
+JUSTICE QUARTERLY,Justice Quarterly,1.0,OK,https://openalex.org/S149422333,0741-8825,0741-8825,False,False,,570,0.207,0.2632,0,0,57,61,32,420
+LEGAL AND CRIMINOLOGICAL PSYCHOLOGY,Legal and Criminological Psychology,1.0,OK,https://openalex.org/S93656081,1355-3259,,False,False,3700,331,0.4864,0.574,0,0,36,125,29,141
+POLICE PRACTICE AND RESEARCH,Police Practice and Research,1.0,OK,https://openalex.org/S19210902,1477-271X,,False,False,,690,0.2377,0.3174,0,0,77,87,55,471
+POLICE QUARTERLY,Police Quarterly,1.0,OK,https://openalex.org/S167107504,1098-6111,,False,False,3650,246,0.2317,0.2967,0,0,23,34,16,173
+POLICING-AN INTERNATIONAL JOURNAL OF POLICE STRATEGIES & MANAGEMENT,Policing An International Journal,1.0,OK,https://openalex.org/S4210169472,1363-951X,,False,False,,803,0.1544,0.1694,0,1,91,32,12,667
+PRISON JOURNAL,The Prison Journal,1.0,OK,https://openalex.org/S40678964,0032-8855,,False,False,3650,428,0.1215,0.2009,0,0,34,18,34,342
+PSYCHIATRY PSYCHOLOGY AND LAW,Psychiatry Psychology and Law,1.0,OK,https://openalex.org/S94954469,1321-8719,,False,False,,816,0.8125,0.8407,0,1,490,172,23,130
+PSYCHOLOGY CRIME & LAW,Psychology Crime and Law,1.0,OK,https://openalex.org/S46260470,1068-316X,,False,False,,819,0.3748,0.3956,0,0,126,181,17,495
+PSYCHOLOGY OF VIOLENCE,Psychology of Violence,1.0,OK,https://openalex.org/S101245202,2152-081X,,False,False,,912,0.3476,0.3629,0,4,93,220,14,581
+PUNISHMENT & SOCIETY-INTERNATIONAL JOURNAL OF PENOLOGY,,,NOT_FOUND,,,,,,,,,,,,,,,
+SECURITY JOURNAL,Security Journal,1.0,OK,https://openalex.org/S74209221,0955-1662,,False,False,3090,556,0.25,0.3309,0,0,50,89,45,372
+SEXUAL ABUSE-A JOURNAL OF RESEARCH AND TREATMENT,,,NOT_FOUND,,,,,,,,,,,,,,,
+THEORETICAL CRIMINOLOGY,Theoretical Criminology,1.0,OK,https://openalex.org/S9300723,1362-4806,,False,False,3650,587,0.2794,0.3526,0,0,63,101,43,380
+TRAUMA VIOLENCE & ABUSE,Trauma Violence & Abuse,1.0,OK,https://openalex.org/S170515770,1524-8380,1524-8380,False,False,3900,1329,0.4515,0.5064,0,0,170,430,73,656
+TRENDS IN ORGANIZED CRIME,Trends in Organized Crime,1.0,OK,https://openalex.org/S118096098,1084-4791,,False,False,3290,376,0.4681,0.5426,0,0,30,146,28,172
+VICTIMS & OFFENDERS,Victims & Offenders,1.0,OK,https://openalex.org/S4210188152,1556-4886,,False,False,,762,0.2428,0.2887,0,0,83,102,35,542
+VIOLENCE AND VICTIMS,Violence and Victims,1.0,OK,https://openalex.org/S91771295,0886-6708,,False,False,,695,0.1165,0.1568,0,1,80,0,28,586
+WOMEN & CRIMINAL JUSTICE,Women & Criminal Justice,1.0,OK,https://openalex.org/S94948478,0897-4454,,False,False,,369,0.1734,0.2141,0,1,30,33,15,290
+YOUTH JUSTICE-AN INTERNATIONAL JOURNAL,Youth Justice,1.0,OK,https://openalex.org/S1028765246,1473-2254,,False,False,3650,404,0.2574,0.3193,0,0,34,70,25,275
+YOUTH VIOLENCE AND JUVENILE JUSTICE,Youth Violence and Juvenile Justice,1.0,OK,https://openalex.org/S116565926,1541-2040,,False,False,3900,203,0.1232,0.1921,0,0,12,13,14,164

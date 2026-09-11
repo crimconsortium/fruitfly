@@ -1,0 +1,45 @@
+{
+  "policy": {
+    "open_statuses": [
+      "diamond",
+      "gold",
+      "green",
+      "hybrid"
+    ],
+    "closed_statuses": [
+      "bronze",
+      "closed"
+    ],
+    "sensitivity_open_statuses": [
+      "diamond",
+      "gold",
+      "green",
+      "hybrid",
+      "bronze"
+    ],
+    "years": [
+      2015,
+      2026
+    ],
+    "credit_repository_locations": true
+  },
+  "citations_config": {
+    "n_seeds": 100,
+    "rng_seed": 20260911,
+    "max_nodes_per_seed": 300,
+    "max_depth": 8,
+    "follow": "references",
+    "batch_size": 50
+  },
+  "n_seeds": 100,
+  "n_truncated": 24,
+  "n_papers": 9722,
+  "headline": {
+    "median_reachable": 0.0,
+    "mean_reachable": 0.07894736842105263,
+    "median_walls": 0.0,
+    "share_seeds_stuck_immediately": 0.9868421052631579,
+    "share_seeds_paywalled": 0.9868421052631579
+  },
+  "attribution": "Bibliographic metadata from OpenAlex (CC0)."
+}
