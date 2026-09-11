@@ -1,0 +1,60 @@
+{
+  "n_journals": 51,
+  "corpus_oa_status_counts": {
+    "closed": 19826,
+    "hybrid": 5193,
+    "green": 3780,
+    "bronze": 1263,
+    "diamond": 562,
+    "gold": 30
+  },
+  "corpus_total": 30654,
+  "corpus_open_share": 0.312,
+  "corpus_open_share_with_bronze": 0.3532,
+  "n_seeds_returned": 100,
+  "seed_oa_status_counts": {
+    "closed": 73,
+    "green": 14,
+    "hybrid": 11,
+    "bronze": 2
+  },
+  "seeds_missing_open_access_object": 0,
+  "seeds_rescued_by_repository_location": 0,
+  "probe_ids": [
+    "W626564908",
+    "W1573463159",
+    "W1594616337",
+    "W1872690150",
+    "W1972221617",
+    "W1973563900",
+    "W2000510480",
+    "W2004961393",
+    "W2013213322",
+    "W2015890179",
+    "W2015968801",
+    "W2016282454",
+    "W2034627686",
+    "W2063164662",
+    "W2074412058",
+    "W2087680043",
+    "W2101208369",
+    "W2124519965",
+    "W2160908590",
+    "W2294608144"
+  ],
+  "batch_filter_openalex_id": {
+    "http_status": 200,
+    "returned": 20,
+    "matched_requested": 20
+  },
+  "batch_filter_openalex": {
+    "http_status": 200,
+    "returned": 20,
+    "matched_requested": 20
+  },
+  "batch_filter_ids_openalex": {
+    "http_status": 200,
+    "returned": 20,
+    "matched_requested": 20
+  }
+}
