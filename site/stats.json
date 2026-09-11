@@ -1,46 +1,46 @@
 {
   "seed": {
-    "id": "W3157089377",
-    "title": "Public Vulnerability to the Police: A Quantitative Inquiry",
-    "journal": "Criminal Justice and Behavior",
-    "year": 2021,
+    "id": "W2977893088",
+    "title": "Predictors and Contexts of Unsolved and Solved Sexual Offenses",
+    "journal": "Crime & Delinquency",
+    "year": 2019,
     "oa_status": "green",
     "passable": true
   },
   "result": {
-    "visited": 129,
-    "reachable": 129,
-    "walls_hit": 1824,
-    "n_steps": 129,
-    "stuck_at": "W2021167596",
+    "visited": 6,
+    "reachable": 6,
+    "walls_hit": 99,
+    "n_steps": 6,
+    "stuck_at": "W2060777962",
     "stuck_reason": "no_passable_neighbours",
     "censored": false,
     "truncated": false
   },
   "calibration": {
-    "gain": 0.008316141590239369,
-    "achieved_mean_hz": 9.93,
+    "gain": 0.009359824382652317,
+    "achieved_mean_hz": 11.45,
     "chance_level": 0.125,
-    "selectivity_real": 0.4062,
-    "selectivity_shuffled_mean": 0.8156,
-    "selectivity_shuffled_sd": 0.0815,
+    "selectivity_real": 0.3594,
+    "selectivity_shuffled_mean": 0.8875,
+    "selectivity_shuffled_sd": 0.0959,
     "selectivity_shuffled_replicates": [
+      0.9531,
+      0.8594,
       0.875,
-      0.875,
-      0.7344,
-      0.7188,
-      0.875
+      1.0,
+      0.75
     ],
     "shuffle_band_2sd": [
-      0.6526,
-      0.9786
+      0.6956,
+      1.0794
     ],
     "n_shuffle_replicates": 5,
     "trials_per_score": 64,
     "wiring_matters": false,
     "verdict": "The shuffles BEAT the real wiring by more than two standard deviations. That is not a finding about brains, it is a warning about our metric: the selectivity measure is picking up something the shuffle supplies more of than reality does. Reported, not tuned away."
   },
-  "calibration_line": "channel selectivity 41%, vs shuffled-connectome control 82% (mean of 5), chance 12%",
+  "calibration_line": "channel selectivity 36%, vs shuffled-connectome control 89% (mean of 5), chance 12%",
   "policy": {
     "open_statuses": [
       "diamond",
@@ -57,7 +57,7 @@
     "v_rest": -52.0,
     "v_threshold": -45.0,
     "v_reset": -52.0,
-    "gain": 0.008316141590239369,
+    "gain": 0.009359824382652317,
     "input_amp": 2.0,
     "n_input_neurons": 800,
     "n_channels": 8,
@@ -67,7 +67,7 @@
     "learning": false,
     "rng_seed": 20260911,
     "neurons": 20000,
-    "edges": 1016133,
+    "edges": 1017037,
     "calibrated": true
   }
 }

@@ -53,10 +53,10 @@
   "counts": {
     "edges_in_source": 151856684,
     "neurons_kept": 20000,
-    "edges_kept": 1016133,
+    "edges_kept": 1017037,
     "readout_neurons": 1342,
-    "edges_dropped_no_nt": 22764,
-    "excitatory_edges": 641373,
-    "inhibitory_edges": 374760
+    "edges_dropped_no_nt": 22740,
+    "excitatory_edges": 641493,
+    "inhibitory_edges": 375544
   }
 }
