@@ -4,59 +4,89 @@ A fruit fly brain foraging the criminology citation graph. Open access is a
 corridor, a paywall is a wall, and it explores until it runs out of things it
 can read.
 
-## Headline
+## Can the fly even start?
+
+Computed over **every** seed. A seed's access status is known whether or not its
+crawl finished, so nothing is excluded here.
 
 | Measure | Value |
 |---|---|
-| Seeds drawn (random, reproducible) | 100 |
-| Seeds excluded as truncated | 24 |
-| Median papers reachable from a seed | 0.0 |
-| Median paywalls hit | 0.0 |
-| Seeds that are themselves paywalled | 99% |
-| Seeds stuck immediately | 99% |
-| Papers seen in total | 9722 |
+| Seeds drawn | 100 |
+| Blocked at the seed | 75 |
+| Open at the seed | 25 |
+| Share blocked | 75% |
 
-Open access here means diamond, gold, green, or hybrid. Bronze and closed are
-walls. That is stricter than OpenAlex's own `is_oa`, which counts bronze.
+Seed status counts: `{'closed': 73, 'green': 14, 'hybrid': 11, 'bronze': 2}`
+
+## How far does it get when it can start?
+
+| Measure | Value |
+|---|---|
+| Crawls completed | 80 |
+| Crawls censored at the 800-paper cap | 20 |
+| Share of open seeds censored | 80% |
+| Median papers beyond the seed (completed only) | 0 |
+| Max papers beyond the seed (completed only) | 133 |
+| Median paywalls hit (completed only) | 0 |
+
+20 crawls reached the cap of 800 papers and were stopped. Their reachable totals are lower bounds and are excluded from crawl-size averages only.
+
+## The whole field, for context
+
+Across 30,654 articles in 51 journals:
+
+| Status | Articles |
+|---|---|
+| closed | 19,826 |
+| hybrid | 5,193 |
+| green | 3,780 |
+| bronze | 1,263 |
+| diamond | 562 |
+| gold | 30 |
+
+Open under our rule: **31%**. Including bronze: 35%.
 
 ## Did the brain matter?
 
 | Measure | Value |
 |---|---|
-| Real connectome channel selectivity | 41% |
-| Degree-preserving shuffled control | 67% |
+| Real connectome selectivity | 41% |
+| Shuffled controls, mean of 5 | 82% |
+| Shuffled controls, sd | 8% |
 | Chance | 12% |
-| Mean firing rate achieved | 9.927999999999999 Hz |
+| Mean firing rate achieved | 9.93 Hz |
 
-**The real wiring does NOT beat its own shuffle. The fly's choices are effectively noise and the connectome is decoration. This is the result; we publish it rather than tuning until it disappears.**
+Replicates: `[0.875, 0.875, 0.7344, 0.7188, 0.875]`
+
+**The shuffles BEAT the real wiring by more than two standard deviations. That is not a finding about brains, it is a warning about our metric: the selectivity measure is picking up something the shuffle supplies more of than reality does. Reported, not tuned away.**
 
 ## The rendered run
 
-- Trace: `data/traces/W4390146717.json`
-- Seed paper: Race, class, and criminal adjudication: Is the US criminal justice system as biased as is often assumed? A meta-analytic review
-- Journal: Aggression and Violent Behavior (2023)
-- Seed access: closed
-- Papers reached: 1
-- Paywalls hit: 0
-- Moves: 0
-- Ended because: seed_paywalled
+- Trace: `data/traces/W3157089377.json`
+- Seed paper: Public Vulnerability to the Police: A Quantitative Inquiry
+- Journal: Criminal Justice and Behavior (2021)
+- Seed access: green
+- Papers reached: 129
+- Paywalls hit: 1824
+- Moves: 129
+- Ended because: no_passable_neighbours
 
-Chosen as the run closest to the median reachable-paper count, not the most
-dramatic one.
-
-## Distribution across all seeds
-
-| Statistic | Papers reached | Paywalls hit |
-|---|---|---|
-| min | 1 | 0 |
-| median | 1 | 0 |
-| mean | 1.1 | 1.9 |
-| max | 6 | 148 |
+Chosen from completed, non-censored crawls that actually moved, as the run
+closest to the median reachable count. Not the most dramatic one.
 
 ## Provenance
 
 - Connectome: male-cns:v1.0, 20000 neurons and 1016133 signed edges after pruning. CC-BY.
 - Journals: Web of Science Criminology & Penology, adopted as-is. See corpus/PROVENANCE.md.
 - Metadata: OpenAlex, CC0.
+
+## Corrections
+
+An earlier run of this pipeline reported that 99% of seeds were paywalled. That
+was wrong. 25 of 100 seeds were open, but 24 of those hit the crawl cap and were
+then excluded from the headline, leaving 75 blocked and 1 open: 75/76 = 98.7%.
+Hitting a compute cap says nothing about whether a paper was readable. Seed-level
+statistics now use all seeds, and censored crawls are counted rather than deleted.
+tests/test_stats.py pins this.
 
 Regenerate everything with the `go` workflow.

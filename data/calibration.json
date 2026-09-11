@@ -1,17 +1,27 @@
 {
   "gain": 0.008316141590239369,
-  "achieved_mean_hz": 9.927999999999999,
+  "achieved_mean_hz": 9.93,
   "target_mean_hz": 10.0,
   "n_channels": 8,
   "chance_level": 0.125,
-  "selectivity_real": 0.40625,
-  "selectivity_shuffled": 0.671875,
-  "shuffled_gain": 0.006260814831489016,
-  "shuffled_achieved_mean_hz": 10.26,
-  "margin": 0.05,
+  "selectivity_real": 0.4062,
+  "selectivity_shuffled_replicates": [
+    0.875,
+    0.875,
+    0.7344,
+    0.7188,
+    0.875
+  ],
+  "selectivity_shuffled_mean": 0.8156,
+  "selectivity_shuffled_sd": 0.0815,
+  "shuffle_band_2sd": [
+    0.6526,
+    0.9786
+  ],
+  "n_shuffle_replicates": 5,
+  "trials_per_score": 64,
   "wiring_matters": false,
-  "verdict": "The real wiring does NOT beat its own shuffle. The fly's choices are effectively noise and the connectome is decoration. This is the result; we publish it rather than tuning until it disappears.",
-  "trials": 64,
+  "verdict": "The shuffles BEAT the real wiring by more than two standard deviations. That is not a finding about brains, it is a warning about our metric: the selectivity measure is picking up something the shuffle supplies more of than reality does. Reported, not tuned away.",
   "probe_hz": {
     "high": 200.0,
     "low": 10.0
