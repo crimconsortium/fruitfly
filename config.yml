@@ -11,10 +11,25 @@ policy:
   # Reported alongside the headline number as a sensitivity check.
   sensitivity_open_statuses: [diamond, gold, green, hybrid, bronze]
   years: [2015, 2026]
+  # Count a repository copy as reachable even when oa_status says otherwise.
+  # oa_status only reports 'green' when the BEST oa location is a repository,
+  # so trusting it alone understates repository availability.
+  credit_repository_locations: true
 
 resolver:
   # Below this fuzzy-match score, a row is flagged CHECK for human review.
   min_match_score: 0.92
+
+citations:
+  n_seeds: 100
+  rng_seed: 20260911
+  # Stopping rule: run until stuck. These are safety valves, not the rule.
+  max_nodes_per_seed: 300
+  max_depth: 8
+  # references = follow reference lists backward, the way a literature review works.
+  # references_and_citing costs ~1 API call per node and is off by default.
+  follow: references
+  batch_size: 50
 
 connectome:
   dataset: "male-cns:v1.0"
