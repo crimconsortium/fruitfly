@@ -125,8 +125,13 @@ class Brain:
             self.readout_groups = groups
             self.calibrated = True
 
-    def run_detailed(self, drives: np.ndarray, rng: np.random.Generator):
-        """Returns (spikes per neuron, total spikes)."""
+    def run_detailed(self, drives: np.ndarray, rng: np.random.Generator, record=None):
+        """Returns (spikes per neuron, total spikes).
+
+        If `record` is a list, one array of firing neuron indices is appended per
+        millisecond of the window. Recording reads state and consumes no randomness,
+        so a recorded run produces exactly the trace an unrecorded run produces.
+        """
         p = self.p
         steps = int(p["window_ms"] / p["dt_ms"])
         decay_syn = float(np.exp(-p["dt_ms"] / p["tau_syn_ms"]))
@@ -154,10 +159,12 @@ class Brain:
                 ).ravel()
                 per_neuron += fired
                 total += int(fired.sum())
+            if record is not None:
+                record.append(np.flatnonzero(fired).astype(np.int32))
         return per_neuron, total
 
-    def run(self, drives: np.ndarray, rng: np.random.Generator):
-        per_neuron, total = self.run_detailed(drives, rng)
+    def run(self, drives: np.ndarray, rng: np.random.Generator, record=None):
+        per_neuron, total = self.run_detailed(drives, rng, record=record)
         scores = np.array([
             per_neuron[g].mean() if len(g) else 0.0 for g in self.readout_groups
         ])
@@ -173,7 +180,9 @@ def load_graphs():
     return neurons, edges, papers, cedges, seeds
 
 
-def run_seed(brain, papers, cedges, seed_rec, policy, p, rng_seed, calib):
+def run_seed(brain, papers, cedges, seed_rec, policy, p, rng_seed, calib,
+             record_steps=None, rasters=None):
+    """record_steps: optional set of step indices whose spike rasters go into `rasters`."""
     sid = seed_rec["seed"]
     rng = np.random.default_rng(rng_seed)
     sub = cedges[cedges["seed"] == sid]
@@ -235,7 +244,10 @@ def run_seed(brain, papers, cedges, seed_rec, policy, p, rng_seed, calib):
             if bumps:
                 drives[len(cands) % p["n_channels"]] += p["wall_hz"]
 
-            scores, total = brain.run(drives, rng)
+            record = [] if (record_steps is not None and t in record_steps) else None
+            scores, total = brain.run(drives, rng, record=record)
+            if record is not None and rasters is not None:
+                rasters[t] = record
             sc = scores[: len(cands)].astype(float)
             sc = sc + rng.random(len(cands)) * 1e-6
             winner = int(np.argmax(sc))

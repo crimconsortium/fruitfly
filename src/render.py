@@ -1,14 +1,17 @@
-"""Render an animated retro-arcade citation crawl video with clean paper-to-paper transitions.
+"""Render the video: a real fly brain on the left, one paper at a time on the right.
 
-Radical visual redesign:
-  - Removed cluttered neuron readout entirely: full canvas dedicated to the paper journey.
-  - Full width layout with no text overlapping.
-  - Visually explicit paper-to-paper transition:
-      1. Shows current paper card on left.
-      2. Shows fly reading outgoing reference citations.
-      3. When encountering paywalls: red locked barrier drops with screen shake and recoil.
-      4. When following open access: fly crawls along a glowing citation arrow into the next card!
-  - Running scoreboard in top right: PAPERS READ (green) and PAYWALLS HIT (red).
+Left panel is the male central nervous system, MaleCNS v1.0, drawn from the annotated
+soma positions. The lights are the spike raster recorded in `data/raster.npz` by
+`src/raster.py`, replayed millisecond by millisecond. Nothing is a decorative particle.
+
+Right panel is the paper the fly is on, one at a time, and every reference it senses on
+that page: red for paywalled, green for open. Both counters accumulate the trace's real
+numbers -- they are never interpolated toward the final total.
+
+Each decision plays in three beats:
+  SENSE   the references on the page appear, mostly walls
+  FIRE    50 ms of brain activity in the 20,000-neuron subgraph
+  CHOOSE  the winning descending group flashes green and the fly follows that citation
 
   python src/render.py --trace data/traces/W123.json
 
@@ -18,323 +21,492 @@ from __future__ import annotations
 
 import argparse
 import json
-import textwrap
 from pathlib import Path
 
 import imageio.v2 as imageio
 import numpy as np
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
+from brainview import (BrainView, INPUT_OPEN, INPUT_WALL, READOUT, WINNER,
+                       role_colours)
 from calib import summary_line
 
 ROOT = Path(__file__).resolve().parent.parent
 SITE = ROOT / "site"
 
 W, H, FPS = 1280, 720, 30
-PAD = 32
+BRAIN_W = 716
+PANEL_X = BRAIN_W + 1
+PANEL_W = W - PANEL_X
+PAD = 28
+COL = PANEL_W - PAD * 2          # usable text width on the right
 
-BLACK = (10, 11, 14)
-CARD_BG = (20, 22, 28)
-CARD_BORDER = (45, 48, 58)
+BLACK = (7, 9, 14)
+PANEL_BG = (13, 15, 21)
+HAIR = (36, 41, 54)
+WHITE = (240, 243, 248)
+GREY = (132, 140, 156)
+DIM = (92, 100, 116)
 ORANGE = (246, 130, 18)
-WHITE = (245, 245, 245)
-GREY = (140, 145, 155)
-LIGHT_GREY = (195, 200, 210)
-GREEN = (46, 204, 113)
-RED = (231, 76, 60)
-RED_BG = (50, 20, 22)
-GREEN_BG = (18, 45, 28)
+GREEN = (98, 226, 140)
+RED = (240, 82, 96)
+CYAN = (60, 214, 255)
+AMBER = (255, 186, 72)
 
-FONT_PATHS = [
-    "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
-    "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-]
+# Beats, in frames at 30 fps.
+F_SENSE, F_FIRE, F_CHOOSE = 14, 30, 16
+F_DECISION = F_SENSE + F_FIRE + F_CHOOSE
+RASTER_MS = 50                    # the engine's integration window
 
-
-def font(size: int, bold: bool = False):
-    p = FONT_PATHS[0] if bold else FONT_PATHS[1]
-    if Path(p).exists():
-        return ImageFont.truetype(p, size)
-    for alt in FONT_PATHS:
-        if Path(alt).exists():
-            return ImageFont.truetype(alt, size)
-    return ImageFont.load_default()
+FONT_DIR = Path("/usr/share/fonts/truetype/dejavu")
+_CACHE: dict[tuple[int, bool], ImageFont.FreeTypeFont] = {}
 
 
-F_BIG = font(34, bold=True)
-F_TITLE = font(22, bold=True)
-F_MID = font(18, bold=True)
-F_BODY = font(15)
-F_SMALL = font(13)
-F_TINY = font(11)
+def font(size: int, bold: bool = False) -> ImageFont.FreeTypeFont:
+    key = (size, bold)
+    if key not in _CACHE:
+        name = "DejaVuSans-Bold.ttf" if bold else "DejaVuSans.ttf"
+        path = FONT_DIR / name
+        _CACHE[key] = (ImageFont.truetype(str(path), size) if path.exists()
+                       else ImageFont.load_default())
+    return _CACHE[key]
 
 
-def draw_fly(d: ImageDraw.ImageDraw, cx: float, cy: float, angle_deg: float, wings_up: bool, s: int = 7, alert: bool = False):
-    rad = np.radians(angle_deg)
-    cos_a, sin_a = np.cos(rad), np.sin(rad)
-
-    def rot(dx, dy):
-        rx = dx * cos_a - dy * sin_a
-        ry = dx * sin_a + dy * cos_a
-        return cx + rx * s, cy + ry * s
-
-    body_pixels = [
-        (0, -3), (0, -2), (0, -1), (0, 0), (0, 1), (0, 2), (0, 3),
-        (-1, -2), (1, -2), (-1, -1), (1, -1), (-1, 0), (1, 0),
-        (-1, 1), (1, 1), (-1, 2), (1, 2)
-    ]
-    b_col = (245, 245, 245) if not alert else (255, 90, 90)
-    for bx, by in body_pixels:
-        px, py = rot(bx, by)
-        d.rectangle([px - s / 2, py - s / 2, px + s / 2, py + s / 2], fill=b_col)
-
-    for ex in (-2, 2):
-        px, py = rot(ex, -3)
-        d.rectangle([px - s / 2, py - s / 2, px + s / 2, py + s / 2], fill=ORANGE)
-
-    wy = -4 if wings_up else -1
-    w_col = (180, 190, 210)
-    for wx in (-5, -4, -3, 3, 4, 5):
-        px, py = rot(wx, wy)
-        d.rectangle([px - s / 2, py - s / 2, px + s / 2, py + s / 2], fill=w_col)
-
-    for lx, ly in [(-3, -2), (-4, 0), (-3, 2), (3, -2), (4, 0), (3, 2)]:
-        px, py = rot(lx, ly)
-        d.rectangle([px - s / 2, py - s / 2, px + s / 2, py + s / 2], fill=(100, 105, 115))
+def text_w(d: ImageDraw.ImageDraw, s: str, f) -> int:
+    return int(d.textlength(s, font=f))
 
 
-def render_transition_frame(curr_paper, target_paper, action_type, fly_state, papers_read, paywalls_hit, shake=(0, 0)):
-    """Render a clean wide canvas showing paper inspection and transition to citations."""
-    img = Image.new("RGB", (W, H), BLACK)
+def wrap(d: ImageDraw.ImageDraw, s: str, f, width: int, max_lines: int) -> list[str]:
+    """Wrap to width, then ellipsise the last line so it can never overflow."""
+    words, lines, cur = s.split(), [], ""
+    for word in words:
+        trial = f"{cur} {word}".strip()
+        if text_w(d, trial, f) <= width or not cur:
+            cur = trial
+        else:
+            lines.append(cur)
+            cur = word
+            if len(lines) == max_lines:
+                break
+    if cur and len(lines) < max_lines:
+        lines.append(cur)
+    lines = lines[:max_lines]
+    if not lines:
+        return [""]
+    # Anything left over, or a single word wider than the column, gets clipped hard.
+    used = len(" ".join(lines).split())
+    if used < len(words) or text_w(d, lines[-1], f) > width:
+        tail = lines[-1]
+        while tail and text_w(d, tail + "...", f) > width:
+            tail = tail[:-1]
+        lines[-1] = tail.rstrip(" ,;:") + "..."
+    return lines
+
+
+def fit_title(d: ImageDraw.ImageDraw, s: str, width: int, max_lines: int,
+              sizes=(22, 20, 18, 16)):
+    """Largest size at which the title fits without being clipped, else clipped small."""
+    for size in sizes:
+        f = font(size, True)
+        lines = wrap(d, s, f, width, max_lines)
+        if not lines[-1].endswith("..."):
+            return f, lines
+    f = font(sizes[-1], True)
+    return f, wrap(d, s, f, width, max_lines)
+
+
+def badge(d: ImageDraw.ImageDraw, x: int, y: int, label: str, fg, bg) -> int:
+    f = font(13, True)
+    tw = text_w(d, label, f)
+    d.rounded_rectangle([x, y, x + tw + 18, y + 22], 4, fill=bg, outline=fg)
+    d.text((x + 9, y + 4), label, font=f, fill=fg)
+    return x + tw + 18
+
+
+def scrim(img: Image.Image, box, alpha: int = 165, fade: str | None = None) -> None:
+    """Darken a box. `fade` ramps the alpha in from 'top' or 'bottom' edge."""
+    w, h = box[2] - box[0], box[3] - box[1]
+    a = np.full((h, w), alpha, dtype=np.uint8)
+    if fade == "top":
+        a = (np.linspace(0, alpha, h)[:, None] * np.ones((1, w))).astype(np.uint8)
+    elif fade == "bottom":
+        a = (np.linspace(alpha, 0, h)[:, None] * np.ones((1, w))).astype(np.uint8)
+    layer = Image.fromarray(np.dstack([
+        np.full((h, w), 5, np.uint8), np.full((h, w), 7, np.uint8),
+        np.full((h, w), 12, np.uint8), a]), "RGBA")
+    img.paste(Image.alpha_composite(
+        img.crop(box).convert("RGBA"), layer).convert("RGB"), (box[0], box[1]))
+
+
+OA_STYLE = {
+    "gold": ("OPEN ACCESS", GREEN),
+    "green": ("OPEN ACCESS", GREEN),
+    "diamond": ("OPEN ACCESS", GREEN),
+    "hybrid": ("OPEN, PAID", AMBER),
+    "bronze": ("FREE TO READ, NO LICENCE", AMBER),
+    "closed": ("PAYWALLED", RED),
+    "unknown": ("NO OPEN COPY FOUND", RED),
+    "unresolved": ("NO OPEN COPY FOUND", RED),
+}
+
+
+def oa_badge(status: str):
+    return OA_STYLE.get((status or "unknown").lower(), OA_STYLE["unknown"])
+
+
+# --------------------------------------------------------------------------- panels
+
+
+def brain_overlay(img: Image.Image, caption: str, ms: int | None, placed: int,
+                  total: int) -> None:
     d = ImageDraw.Draw(img)
+    f_lab, f_small = font(14, True), font(13)
 
-    sx, sy = shake
-    cx1, cy1 = PAD + sx, PAD + 54 + sy
-    cx2, cy2 = W - PAD - 260 + sx, H - PAD - 20 + sy
+    scrim(img, (0, 0, BRAIN_W, 58), 150)
+    d.text((PAD, 14), "MALE CENTRAL NERVOUS SYSTEM", font=f_lab, fill=WHITE)
+    d.text((PAD, 34), f"MaleCNS v1.0 - {total:,} annotated somas, "
+                      f"{placed:,} of them simulated", font=f_small, fill=GREY)
+    if ms is not None:
+        stamp = f"t = {ms:2d} ms"
+        d.text((BRAIN_W - PAD - text_w(d, stamp, f_lab), 14), stamp,
+               font=f_lab, fill=ORANGE)
 
-    # Top Header
-    d.text((PAD, PAD + 10), "A FRUIT FLY LOOKS FOR CRIMINOLOGY IT CAN READ", font=F_TITLE, fill=ORANGE)
-    d.text((PAD, PAD + 34), "MaleCNS v1.0 connectome navigating citation reference network", font=F_TINY, fill=GREY)
-
-    # Scoreboard in Top Right
-    sb_x1, sb_y1 = W - PAD - 230, PAD + 54
-    sb_x2, sb_y2 = W - PAD, PAD + 230
-    d.rectangle([sb_x1, sb_y1, sb_x2, sb_y2], fill=(18, 20, 26), outline=CARD_BORDER, width=2)
-    d.text((sb_x1 + 16, sb_y1 + 14), "PAPERS READ", font=F_SMALL, fill=GREY)
-    d.text((sb_x1 + 16, sb_y1 + 34), f"{papers_read:03d}", font=F_BIG, fill=GREEN)
-
-    d.text((sb_x1 + 16, sb_y1 + 90), "PAYWALLS HIT", font=F_SMALL, fill=GREY)
-    d.text((sb_x1 + 16, sb_y1 + 110), f"{paywalls_hit:04d}", font=F_BIG, fill=RED)
-
-    # Branding in bottom right
-    d.text((sb_x1, H - PAD - 42), "CRIMCONSORTIUM", font=F_MID, fill=ORANGE)
-    d.text((sb_x1, H - PAD - 18), "fruitfly.crimconsortium.com", font=F_TINY, fill=GREY)
-
-    # Main Paper Inspection Card
-    is_paywalled = (action_type == "bump")
-    card_bg = RED_BG if is_paywalled else CARD_BG
-    card_outline = RED if is_paywalled else (GREEN if curr_paper.get("passable") else CARD_BORDER)
-    d.rectangle([cx1, cy1, cx2, cy2], fill=card_bg, outline=card_outline, width=3)
-
-    # Card Top Status Bar
-    header_h = 52
-    bar_fill = (50, 18, 20) if is_paywalled else ((20, 50, 30) if curr_paper.get("passable") else (30, 32, 40))
-    d.rectangle([cx1, cy1, cx2, cy1 + header_h], fill=bar_fill, outline=card_outline, width=1)
-
-    status_tag = (curr_paper.get("oa_status") or ("CLOSED" if is_paywalled else "OPEN")).upper()
-    if is_paywalled:
-        badge_txt = f"PAYWALL  [{status_tag}] — ACCESS DENIED ($39.95)"
-        badge_col = RED
-    else:
-        badge_txt = f"CORRIDOR  [{status_tag}] — FULL TEXT ACCESSIBLE"
-        badge_col = GREEN
-
-    d.text((cx1 + 20, cy1 + 14), badge_txt, font=F_MID, fill=badge_col)
-
-    # Paper Title (Clean Wrap, plenty of room now)
-    raw_title = curr_paper.get("title") or "Unknown Manuscript"
-    lines = textwrap.wrap(raw_title, width=54)
-    ty = cy1 + 75
-    for line in lines[:3]:
-        d.text((cx1 + 24, ty), line, font=F_BIG, fill=WHITE)
-        ty += 44
-
-    # Journal & Publication Year
-    j_name = curr_paper.get("journal") or "Criminology Journal"
-    yr = curr_paper.get("year") or ""
-    j_str = f"Journal: {j_name} ({yr})"
-    d.text((cx1 + 24, ty + 10), j_str, font=F_MID, fill=ORANGE)
-
-    # Divider
-    d.line([cx1 + 24, ty + 46, cx2 - 24, ty + 46], fill=(55, 60, 72), width=1)
-
-    # Citation Traversal Action Bar
-    action_box_y1 = cy2 - 130
-    action_box_y2 = cy2 - 20
-
-    if is_paywalled:
-        d.rectangle([cx1 + 20, action_box_y1, cx2 - 20, action_box_y2], fill=(65, 20, 22), outline=RED, width=2)
-        d.text((cx1 + 36, action_box_y1 + 16), "WALL: Fly tried to read paywalled reference citation.", font=F_MID, fill=RED)
-        d.text((cx1 + 36, action_box_y1 + 44), "Connectome blocked — fly recoils and turns back to explore open paths.", font=F_BODY, fill=LIGHT_GREY)
-    else:
-        d.rectangle([cx1 + 20, action_box_y1, cx2 - 20, action_box_y2], fill=(20, 52, 30), outline=GREEN, width=2)
-        next_title = (target_paper.get("title") or "Next Reference") if target_paper else "Exploring references..."
-        next_trunc = textwrap.shorten(next_title, width=55, placeholder="...")
-        d.text((cx1 + 36, action_box_y1 + 16), "CORRIDOR: Paper read! Following citation link to next paper...", font=F_MID, fill=GREEN)
-        d.text((cx1 + 36, action_box_y1 + 44), f"--> Crawling into: \"{next_trunc}\"", font=F_BODY, fill=ORANGE)
-
-    # Fly Sprite
-    fx, fy, angle, wings_up, is_bumping = fly_state
-    draw_fly(d, fx + sx, fy + sy, angle, wings_up, s=7, alert=is_bumping)
-
-    return img
+    scrim(img, (0, H - 74, BRAIN_W, H), 165)
+    d.text((PAD, H - 64), caption, font=f_small, fill=GREY)
+    keys = [(CYAN, "open reference"), (RED, "paywall drive"),
+            (AMBER, "descending neurons"), (GREEN, "group that won")]
+    x = PAD
+    for colour, label in keys:
+        d.ellipse([x, H - 36, x + 9, H - 27], fill=colour)
+        d.text((x + 16, H - 39), label, font=f_small, fill=GREY)
+        x += 16 + text_w(d, label, f_small) + 26
 
 
-def title_card(lines, sub=None):
-    img = Image.new("RGB", (W, H), BLACK)
+def draw_panel(d: ImageDraw.ImageDraw, *, step_no: int, step_total: int, phase: str,
+               phase_colour, paper: dict, n_open: int, n_wall: int, reveal: float,
+               note: str, note_colour, papers_read: int, walls_hit: int,
+               winner_pulse: float) -> None:
+    """The right-hand column. Every element sits at a fixed y so it never jumps."""
+    d.rectangle([PANEL_X, 0, W, H], fill=PANEL_BG)
+    d.line([PANEL_X, 0, PANEL_X, H], fill=HAIR)
+    x = PANEL_X + PAD
+
+    d.text((x, 22), f"DECISION {step_no} OF {step_total}", font=font(14, True), fill=DIM)
+    d.text((x, 44), phase, font=font(21, True), fill=phase_colour)
+
+    # -- the one paper -------------------------------------------------------
+    d.line([x, 80, x + COL, 80], fill=HAIR)
+    d.text((x, 92), "NOW READING", font=font(13, True), fill=ORANGE)
+
+    # Fixed line pitch and a 4-line block, so nothing below can ever be pushed.
+    f_title, lines = fit_title(d, paper.get("title") or "Untitled record", COL, 4,
+                               sizes=(20, 18, 16, 15))
+    for i, line in enumerate(lines):
+        d.text((x, 112 + i * 25), line, font=f_title, fill=WHITE)
+
+    venue = paper.get("journal") or "Venue not recorded"
+    year = paper.get("year")
+    meta = f"{venue}{f'  -  {year}' if year else ''}"
+    for i, line in enumerate(wrap(d, meta, font(15), COL, 2)):
+        d.text((x, 214 + i * 19), line, font=font(15), fill=GREY)
+    label, colour = oa_badge(paper.get("oa_status"))
+    badge(d, x, 256, label, colour, (colour[0] // 7, colour[1] // 7, colour[2] // 7))
+
+    # -- references sensed on this page --------------------------------------
+    d.line([x, 292, x + COL, 292], fill=HAIR)
+    d.text((x, 302), "REFERENCES ON THIS PAGE", font=font(13, True), fill=ORANGE)
+    total = n_open + n_wall
+    d.text((x, 324), f"{total} sensed  -  {n_wall} paywalled  -  {n_open} open",
+           font=font(15, True), fill=WHITE)
+
+    cell, gap, cols, rows = 13, 4, 29, 4
+    cap = cols * rows
+    shown_open = min(n_open, cap)
+    shown_wall = min(n_wall, max(cap - shown_open, 0))
+    order = [GREEN] * shown_open + [RED] * shown_wall
+    lit = int(round(len(order) * max(0.0, min(1.0, reveal))))
+    gy = 348
+    for i, colour in enumerate(order):
+        cx = x + (i % cols) * (cell + gap)
+        cy = gy + (i // cols) * (cell + gap)
+        if i < lit:
+            d.rectangle([cx, cy, cx + cell, cy + cell], fill=colour)
+        else:
+            d.rectangle([cx, cy, cx + cell, cy + cell], outline=(30, 34, 46))
+    hidden = total - (shown_open + shown_wall)
+    grid_bottom = gy + rows * (cell + gap)
+    if hidden > 0:
+        d.text((x, grid_bottom), f"+{hidden} more paywalled", font=font(13), fill=DIM)
+
+    # -- fixed-height note strip --------------------------------------------
+    ny = 442
+    d.line([x, ny, x + COL, ny], fill=HAIR)
+    for i, line in enumerate(wrap(d, note, font(15), COL, 2)):
+        d.text((x, ny + 10 + i * 21), line, font=font(15), fill=note_colour)
+
+    # -- counters ------------------------------------------------------------
+    cy = 508
+    d.line([x, cy, x + COL, cy], fill=HAIR)
+    f_num, f_lab = font(42, True), font(13, True)
+    d.text((x, cy + 20), f"{papers_read:,}", font=f_num, fill=GREEN)
+    d.text((x, cy + 70), "PAPERS READ", font=f_lab, fill=GREY)
+    x2 = x + COL // 2
+    glow = int(220 + 35 * winner_pulse)
+    d.text((x2, cy + 20), f"{walls_hit:,}", font=f_num, fill=(glow, 82, 96))
+    d.text((x2, cy + 70), "PAYWALLS HIT", font=f_lab, fill=GREY)
+
+    d.line([x, H - 62, x + COL, H - 62], fill=HAIR)
+    d.text((x, H - 46), "fruitfly.crimconsortium.com", font=font(14, True), fill=DIM)
+
+
+def card(lines, sub: str | None = None, bg=BLACK) -> Image.Image:
+    img = Image.new("RGB", (W, H), bg)
     d = ImageDraw.Draw(img)
-    y = H // 2 - 28 * len(lines)
-    for text, f, col in lines:
-        w = d.textlength(text, font=f)
-        d.text(((W - w) / 2, y), text, font=f, fill=col)
-        y += f.size + 18
+    height = sum(f.size + 16 for _, f, _ in lines)
+    y = (H - height) // 2 - 20
+    for text, f, colour in lines:
+        d.text(((W - text_w(d, text, f)) // 2, y), text, font=f, fill=colour)
+        y += f.size + 16
     if sub:
-        w = d.textlength(sub, font=F_SMALL)
-        d.text(((W - w) / 2, H - PAD - 40), sub, font=F_SMALL, fill=GREY)
-    d.text((PAD, H - PAD - 20), "CRIMCONSORTIUM", font=F_MID, fill=ORANGE)
+        f = font(17)
+        for i, line in enumerate(wrap(d, sub, f, int(W * 0.72), 3)):
+            d.text(((W - text_w(d, line, f)) // 2, y + 24 + i * 26), line,
+                   font=f, fill=GREY)
     return img
+
+
+# --------------------------------------------------------------------------- main
 
 
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--trace", required=True)
-    ap.add_argument("--seconds", type=float, default=24.0)
+    ap.add_argument("--raster", default="data/raster.npz")
+    ap.add_argument("--decisions", type=int, default=12,
+                    help="how many opening decisions to play in full")
     args = ap.parse_args()
 
     trace = json.loads(Path(args.trace).read_text())
     SITE.mkdir(exist_ok=True)
-
-    nodes_map = {n["id"]: n for n in trace["nodes"]}
-    calib = trace.get("calibration") or {}
+    nodes = {n["id"]: n for n in trace["nodes"]}
+    steps = trace["steps"]
     seed = trace["seed"]
+    result = trace["result"]
+    calib = trace.get("calibration") or {}
+    n_ch = int(trace["engine"].get("channels", 8))
 
-    title = title_card([
-        ("A FRUIT FLY", F_BIG, WHITE),
-        ("LOOKS FOR CRIMINOLOGY", F_BIG, WHITE),
-        ("IT CAN READ", F_BIG, ORANGE),
-    ], sub="MaleCNS v1.0 Connectome (CC-BY) x OpenAlex (CC0). Open access = corridor, paywalls = walls.")
+    r = np.load(ROOT / args.raster)
+    have = {int(k.split("_")[1]) for k in r.files if k.startswith("idx_")}
+    bv = BrainView(BRAIN_W, H, ROOT / "data" / "connectome" / "soma_xyz.parquet",
+                   r["body"], pitch_deg=26.0, yaw_range=(-22.0, 22.0), fill=1.0)
+    print(f"brain: {bv.n_points:,} somas, {bv.n_placed:,} of "
+          f"{bv.n_sim:,} simulated neurons placed")
 
-    # Flatten run into distinct chronological steps
-    events = []
-    # Seed paper
-    events.append({
-        "type": "read",
-        "curr": seed,
-        "target": None,
-    })
+    # Real running totals, straight off the trace. Never interpolated.
+    # `before` is the state on arriving at a decision, `after` once it is taken.
+    read_before, wall_before, read_after, wall_after = [], [], [], []
+    running_read, running_wall = 1, 0
+    for s in steps:
+        read_before.append(running_read)
+        wall_before.append(running_wall)
+        running_wall += len(s.get("bumps", []))
+        if s.get("to"):
+            running_read += 1
+        read_after.append(running_read)
+        wall_after.append(running_wall)
+    assert read_after[-1] == result["reachable"], "paper count must match the trace"
+    assert wall_after[-1] == result["walls_hit"], "wall count must match the trace"
 
-    for s in trace["steps"]:
-        # Add bumps encountered
-        for b_id in s.get("bumps", []):
-            if b_id in nodes_map:
-                events.append({
-                    "type": "bump",
-                    "curr": nodes_map[b_id],
-                    "target": None,
-                })
-        # Add transition
-        t_id = s.get("to")
-        if t_id and t_id in nodes_map and nodes_map[t_id].get("passable"):
-            events.append({
-                "type": "read",
-                "curr": nodes_map[t_id],
-                "target": nodes_map.get(s.get("to")),
-            })
+    playable = [i for i in sorted(have) if i < len(steps)]
+    head = [i for i in playable if i < len(steps) - 1][:args.decisions]
+    last_fired = playable[-1] if playable else None
+    if last_fired in head:
+        last_fired = None
 
-    # Pick 10-14 representative chronological events
-    if len(events) > 12:
-        indices = np.linspace(0, len(events) - 1, 12, dtype=int)
-        selected_events = [events[i] for i in indices]
-    else:
-        selected_events = events
+    frames: list[np.ndarray] = []
+    yaw_period = FPS * 17.0
 
-    frames = [np.asarray(title)] * (2 * FPS)
-    
-    # Track true accumulated counts proportionally across the run
-    final_read = trace["result"]["reachable"]
-    final_walls = trace["result"]["walls_hit"]
+    def yaw_at(n: int) -> float:
+        return 22.0 * float(np.sin(2 * np.pi * n / yaw_period))
 
-    frames_per_event = int((args.seconds - 6.0) * FPS / max(len(selected_events), 1))
-    frames_per_event = max(frames_per_event, 30)
+    def paper_of(step) -> dict:
+        return nodes.get(step["at"], seed)
 
-    card_center_x = (PAD + (W - PAD - 260)) // 2
-    card_center_y = H // 2 + 30
+    def compose(step_idx: int, step_no: int, phase: str, phase_colour, reveal: float,
+                note: str, note_colour, ms: int | None, caption: str,
+                read: int, walls: int, pulse: float = 0.0) -> np.ndarray:
+        step = steps[step_idx]
+        left = bv.render(yaw_at(len(frames)))
+        brain_overlay(left, caption, ms, bv.n_placed, bv.n_points)
+        img = Image.new("RGB", (W, H), BLACK)
+        img.paste(left, (0, 0))
+        draw_panel(ImageDraw.Draw(img), step_no=step_no, step_total=len(steps),
+                   phase=phase, phase_colour=phase_colour, paper=paper_of(step),
+                   n_open=len(step["candidates"]), n_wall=len(step.get("bumps", [])),
+                   reveal=reveal, note=note, note_colour=note_colour,
+                   papers_read=read, walls_hit=walls, winner_pulse=pulse)
+        return np.asarray(img)
 
-    for idx, ev in enumerate(selected_events, 1):
-        action_type = ev["type"]
-        curr_p = ev["curr"]
-        target_p = ev["target"]
+    def play(step_idx: int) -> None:
+        step = steps[step_idx]
+        step_no = step_idx + 1
+        cands = step["candidates"]
+        bumps = step.get("bumps", [])
+        open_ch = {c["channel"] for c in cands}
+        wall_ch = (len(cands) % n_ch) if bumps else None
+        chosen = next((c for c in cands if c["id"] == step.get("to")), None)
+        win_ch = chosen["channel"] if chosen else None
+        colours, gains = role_colours(r["is_input"], r["input_channel"],
+                                      r["is_readout"], r["readout_channel"],
+                                      open_ch, wall_ch, win_ch)
 
-        # Scale running counters smoothly to reflect the true large-scale journey
-        p_read = int(final_read * (idx / len(selected_events)))
-        p_walls = int(final_walls * (idx / len(selected_events)))
+        # SENSE -- the page's references come in. The brain is still.
+        bv.heat[:] = 0.0
+        bv.tint[:] = 0.0
+        sense_note = (f"{len(bumps)} of these references are behind a paywall. "
+                      f"Only the open ones can drive the brain.")
+        for f in range(F_SENSE):
+            frames.append(compose(
+                step_idx, step_no, "SENSING REFERENCES", CYAN,
+                (f + 1) / F_SENSE, sense_note, GREY, None,
+                "The fly senses the references on this page. It is not firing yet.",
+                read_before[step_idx], wall_before[step_idx]))
 
-        for f in range(frames_per_event):
-            t = f / max(frames_per_event - 1, 1)
-            wings_up = (f // 2) % 2 == 0
+        # FIRE -- replay the recorded raster, real milliseconds.
+        ms_arr, idx_arr = r[f"ms_{step_idx}"], r[f"idx_{step_idx}"]
+        note = (f"{RASTER_MS} ms of activity in the 20,000-neuron subgraph. "
+                f"{step['total_spikes']:,} spikes.")
+        for f in range(F_FIRE):
+            lo = int(round(RASTER_MS * f / F_FIRE))
+            hi = int(round(RASTER_MS * (f + 1) / F_FIRE))
+            bv.decay_heat()
+            sel = idx_arr[(ms_arr >= lo) & (ms_arr < hi)]
+            bv.fire(sel, colours[sel], gains[sel])
+            frames.append(compose(
+                step_idx, step_no, "BRAIN FIRING", ORANGE, 1.0, note, GREY, hi,
+                "Every lit dot is one neuron that spiked, at its real soma position.",
+                read_before[step_idx], wall_after[step_idx]))
 
-            if action_type == "bump":
-                # Bump animation: Fly approaches wall, hits it with shake, recoils
-                if t < 0.4:
-                    fx = card_center_x
-                    fy = (card_center_y + 40) - (t / 0.4) * 40
-                    ang = 0
-                    is_bump = False
-                    shake = (0, 0)
-                else:
-                    fx = card_center_x + np.sin(f * 2.5) * 6
-                    fy = card_center_y + (t - 0.4) * 35
-                    ang = 180
-                    is_bump = True
-                    shake = (int(np.sin(f * 3) * 6), int(np.cos(f * 3) * 6))
-            else:
-                # Open Access: Fly crawls from left to right along the citation path
-                fx = (card_center_x - 120) + t * 240
-                fy = card_center_y + np.sin(t * np.pi * 2) * 20
-                ang = 90 + int(np.cos(t * np.pi * 2) * 25)
-                is_bump = False
-                shake = (0, 0)
+        # CHOOSE -- the winning descending group, then the citation it follows.
+        target = nodes.get(step.get("to"), {})
+        if chosen:
+            note = f"\u2192 next: {target.get('title') or step.get('to')}"
+            note_colour = GREEN
+        else:
+            note = "No open reference left on this page. The walk stops here."
+            note_colour = RED
+        win_rows = np.flatnonzero(r["is_readout"] & (r["readout_channel"] == win_ch)) \
+            if win_ch is not None else np.array([], dtype=int)
+        for f in range(F_CHOOSE):
+            bv.decay_heat()
+            if len(win_rows) and f < 6:
+                bv.fire(win_rows, colours[win_rows], gains[win_rows] * 1.4)
+            frames.append(compose(
+                step_idx, step_no, "FOLLOWING THE CITATION", GREEN, 1.0,
+                note, note_colour, RASTER_MS,
+                "Green is the descending group with the most spikes. That is the choice.",
+                read_after[step_idx], wall_after[step_idx],
+                pulse=float(np.sin(np.pi * f / F_CHOOSE))))
 
-            f_img = render_transition_frame(
-                curr_p, target_p, action_type,
-                (fx, fy, ang, wings_up, is_bump),
-                p_read, p_walls, shake
-            )
-            frames.append(np.asarray(f_img))
+    # -- intro: the resting nervous system, full frame ------------------------
+    WIDE_H = 440
+    wide = BrainView(W, WIDE_H, ROOT / "data" / "connectome" / "soma_xyz.parquet",
+                     r["body"], pitch_deg=26.0, yaw_range=(-22.0, 22.0), fill=0.92)
 
-    # End Summary Card
-    r = trace["result"]
-    sel = summary_line(calib)
-    end = title_card([
-        (f"{r['reachable']} papers read", F_BIG, WHITE),
-        (f"{r['walls_hit']} paywalls hit", F_BIG, RED),
-        ("then it ran out of open access", F_MID, GREY),
-    ], sub=sel or "fruitfly.crimconsortium.com")
-    frames += [np.asarray(end)] * (4 * FPS)
+    def wide_frame(n: int, brightness: float) -> tuple[Image.Image, ImageDraw.ImageDraw]:
+        img = Image.new("RGB", (W, H), BLACK)
+        img.paste(wide.render(yaw_at(n), brightness=brightness), (0, 0))
+        return img, ImageDraw.Draw(img)
 
+    for f in range(int(2.8 * FPS)):
+        img, d = wide_frame(f, 2.3)
+        f_big, f_mid = font(44, True), font(19)
+        for i, line in enumerate(["A FRUIT FLY BRAIN LOOKS FOR",
+                                  "CRIMINOLOGY IT CAN READ"]):
+            d.text(((W - text_w(d, line, f_big)) // 2, 468 + i * 54), line,
+                   font=f_big, fill=WHITE if i == 0 else ORANGE)
+        sub = ("MaleCNS v1.0 connectome (CC-BY) driving a walk through OpenAlex (CC0). "
+               "Open access is a corridor. Paywalls are walls.")
+        for i, line in enumerate(wrap(d, sub, f_mid, int(W * 0.66), 2)):
+            d.text(((W - text_w(d, line, f_mid)) // 2, 596 + i * 26), line,
+                   font=f_mid, fill=GREY)
+        frames.append(np.asarray(img))
+
+    for i in head:
+        play(i)
+
+    # -- the long middle, stated rather than faked ---------------------------
+    if last_fired is not None:
+        skipped = last_fired - head[-1] - 1
+        jump = card([
+            (f"{skipped} more decisions", font(46, True), WHITE),
+            ("play out the same way", font(46, True), ORANGE),
+        ], sub=(f"Between decision {head[-1] + 1} and decision {last_fired + 1} the fly "
+                f"hits {wall_before[last_fired] - wall_after[head[-1]]:,} more "
+                f"paywalls and reads "
+                f"{read_before[last_fired] - read_after[head[-1]]:,} more papers."))
+        frames += [np.asarray(jump)] * int(2.1 * FPS)
+        play(last_fired)
+
+    # -- the end of the road: nothing open left anywhere ----------------------
+    stuck = len(steps) - 1
+    if not steps[stuck]["candidates"]:
+        for f in range(int(2.6 * FPS)):
+            fade = max(0.14, 0.55 * (1.0 - f / (1.4 * FPS)))
+            img, d = wide_frame(len(frames), fade)
+            f_big, f_mid = font(44, True), font(18)
+            d.text(((W - text_w(d, "NOWHERE LEFT TO GO", f_big)) // 2, 458),
+                   "NOWHERE LEFT TO GO", font=f_big, fill=RED)
+            f_sub = font(28, True)
+            d.text(((W - text_w(d, "THE BRAIN GOES QUIET", f_sub)) // 2, 512),
+                   "THE BRAIN GOES QUIET", font=f_sub, fill=WHITE)
+            body = (f"Every open-access reference reachable from these "
+                    f"{result['reachable']:,} papers has already been read. "
+                    f"Everything else is a wall, so there is nothing left to fire on.")
+            for i, line in enumerate(wrap(d, body, f_mid, int(W * 0.60), 3)):
+                d.text(((W - text_w(d, line, f_mid)) // 2, 560 + i * 24), line,
+                       font=f_mid, fill=GREY)
+            frames.append(np.asarray(img))
+
+    # -- outro ---------------------------------------------------------------
+    line = summary_line(calib)
+    end = card([
+        (f"{result['reachable']:,} papers read", font(52, True), GREEN),
+        (f"{result['walls_hit']:,} paywalls hit", font(52, True), RED),
+        ("then it ran out of open access", font(24), GREY),
+    ], sub=(line or "") + "   fruitfly.crimconsortium.com")
+    frames += [np.asarray(end)] * int(3.4 * FPS)
+
+    # A point cloud is high-entropy, so it needs a real rate-controlled encode
+    # rather than imageio's default quality knob, or the file lands near 40 MB.
     mp4 = SITE / "fly.mp4"
-    imageio.mimwrite(mp4, frames, fps=FPS, quality=8, macro_block_size=1)
-    print(f"{mp4}: {mp4.stat().st_size / 1e6:.1f} MB, {len(frames)} frames")
+    imageio.mimwrite(mp4, frames, fps=FPS, codec="libx264", macro_block_size=1,
+                     pixelformat="yuv420p",
+                     output_params=["-crf", "25", "-preset", "slow",
+                                    "-movflags", "+faststart"])
+    print(f"{mp4}: {mp4.stat().st_size / 1e6:.1f} MB, {len(frames)} frames, "
+          f"{len(frames) / FPS:.1f}s")
 
-    small = [np.asarray(Image.fromarray(f).resize((640, 360), Image.NEAREST))
-             for f in frames[::3]]
+    # The GIF is the social preview, so it is a short excerpt: the opening and the
+    # first couple of decisions, at 10 fps.
+    excerpt = frames[:int(7.2 * FPS)][::3]
+    prepped = [Image.fromarray(f).resize((640, 360), Image.BOX)
+               .filter(ImageFilter.GaussianBlur(0.5)) for f in excerpt]
+    # One palette shared by every frame: the role colours survive and successive
+    # frames compress against each other instead of flickering.
+    stack = Image.new("RGB", (640, 360 * 6))
+    for k, i in enumerate(np.linspace(0, len(prepped) - 1, 6).astype(int)):
+        stack.paste(prepped[i], (0, k * 360))
+    palette = stack.quantize(colors=96, dither=Image.NONE)
+    small = [np.asarray(p.quantize(palette=palette, dither=Image.NONE).convert("RGB"))
+             for p in prepped]
     gif = SITE / "fly.gif"
     imageio.mimwrite(gif, small, duration=1000 / (FPS / 3), loop=0)
     print(f"{gif}: {gif.stat().st_size / 1e6:.1f} MB, {len(small)} frames")
 
     (SITE / "stats.json").write_text(json.dumps({
-        "seed": seed, "result": r, "calibration": calib,
-        "calibration_line": sel,
+        "seed": seed, "result": result, "calibration": calib,
+        "calibration_line": line,
         "policy": trace["policy"], "engine": trace["engine"],
     }, indent=2))
 

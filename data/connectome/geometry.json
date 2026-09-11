@@ -1,0 +1,29 @@
+{
+  "dataset": "male-cns:v1.0",
+  "source_url": "https://storage.googleapis.com/flyem-male-cns/v1.0/connectome-data/flat-connectome/body-annotations-male-cns-v1.0-minconf-0.5.feather",
+  "source_sha256": "2177e246113e4cfbf1e7772ec37c6da1955ff22e8063d0b1f833101f99a9a3b2",
+  "licence": "CC-BY",
+  "field": "somaLocation",
+  "n_bodies_in_file": 211577,
+  "n_with_soma": 141781,
+  "bounds": {
+    "x": [
+      2468.0,
+      93668.0
+    ],
+    "y": [
+      4758.0,
+      68996.0
+    ],
+    "z": [
+      10154.0,
+      134531.0
+    ]
+  },
+  "simulated_coverage": {
+    "n_simulated": 20000,
+    "n_simulated_placed": 17437,
+    "n_readout": 1342,
+    "n_readout_placed": 1330
+  }
+}

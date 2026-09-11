@@ -86,8 +86,14 @@ jobs:
         id: pick
         run: python src/pick_trace.py >> "$GITHUB_OUTPUT"
 
+      - name: Fetch the MaleCNS soma positions for the brain view
+        run: python src/fetch_geometry.py
+
+      - name: Record the real spike rasters for the decisions the video shows
+        run: PYTHONPATH=src python src/raster.py --trace "${{ steps.pick.outputs.trace }}"
+
       - name: Render the video
-        run: python src/render.py --trace "${{ steps.pick.outputs.trace }}" --seconds 20
+        run: PYTHONPATH=src python src/render.py --trace "${{ steps.pick.outputs.trace }}"
 
       - name: Commit everything
         run: |
