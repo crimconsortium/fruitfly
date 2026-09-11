@@ -8,6 +8,10 @@ Shows 10-15 key sequential decision rooms where the fly navigates doorways:
   - Right Panel: Real-time descending-neuron spiking readout bars, spikes count,
     live "PAPERS READ" and "PAYWALLS HIT" arcade counters.
 
+Deduplicates doorway candidate titles by normalised title so the same paper appearing
+under multiple OpenAlex work IDs doesn't render duplicate doorway cards. Shows publication
+year on each doorway to distinguish related papers.
+
   python src/render.py --trace data/traces/W123.json
 
 Outputs: site/fly.mp4, site/fly.gif, site/stats.json
@@ -16,6 +20,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import textwrap
 from pathlib import Path
 
@@ -68,6 +73,13 @@ F_SMALL = font(13)
 F_TINY = font(11)
 
 
+def norm_title(t: str) -> str:
+    """Simplify title for duplicate detection."""
+    s = (t or "").lower().strip()
+    s = re.sub(r"[^\w\s]", "", s)
+    return re.sub(r"\s+", " ", s)
+
+
 def draw_fly_sprite(d: ImageDraw.ImageDraw, cx: float, cy: float, angle_deg: float, wings_up: bool, s: int = 5, alert: bool = False):
     """Draw an animated 2D top-down fly sprite with orange compound eyes and fluttering wings."""
     rad = np.radians(angle_deg)
@@ -78,7 +90,6 @@ def draw_fly_sprite(d: ImageDraw.ImageDraw, cx: float, cy: float, angle_deg: flo
         ry = dx * sin_a + dy * cos_a
         return cx + rx * s, cy + ry * s
 
-    # Fly body parts
     body_pixels = [
         (0, -3), (0, -2), (0, -1), (0, 0), (0, 1), (0, 2), (0, 3),
         (-1, -2), (1, -2), (-1, -1), (1, -1), (-1, 0), (1, 0),
@@ -89,19 +100,16 @@ def draw_fly_sprite(d: ImageDraw.ImageDraw, cx: float, cy: float, angle_deg: flo
         px, py = rot(bx, by)
         d.rectangle([px - s / 2, py - s / 2, px + s / 2, py + s / 2], fill=b_col)
 
-    # Eyes: bright orange compound eyes
     for ex in (-2, 2):
         px, py = rot(ex, -3)
         d.rectangle([px - s / 2, py - s / 2, px + s / 2, py + s / 2], fill=ORANGE)
 
-    # Wings: fluttering translucent wings
     wy = -4 if wings_up else -1
     w_col = (175, 185, 205)
     for wx in (-5, -4, -3, 3, 4, 5):
         px, py = rot(wx, wy)
         d.rectangle([px - s / 2, py - s / 2, px + s / 2, py + s / 2], fill=w_col)
 
-    # Legs
     for lx, ly in [(-3, -2), (-4, 0), (-3, 2), (3, -2), (4, 0), (3, 2)]:
         px, py = rot(lx, ly)
         d.rectangle([px - s / 2, py - s / 2, px + s / 2, py + s / 2], fill=(90, 90, 100))
@@ -144,7 +152,7 @@ def render_room_frame(curr_paper, doors, fly_state, step_data, papers_read, payw
     n_doors = len(doors)
     if n_doors > 0:
         room_w = room_x2 - room_x1
-        door_w = min(180, (room_w - 40) // n_doors - 14)
+        door_w = min(190, (room_w - 40) // n_doors - 14)
         total_doors_w = n_doors * door_w + (n_doors - 1) * 14
         start_dx = room_x1 + (room_w - total_doors_w) // 2
 
@@ -165,8 +173,10 @@ def render_room_frame(curr_paper, doors, fly_state, step_data, papers_read, payw
             d.rectangle([dx, dy, dx + door_w, dy + 22], fill=(15, 15, 18))
             d.text((dx + 6, dy + 5), badge, font=F_TINY, fill=b_col)
 
-            # Paper title preview
-            d_title = textwrap.shorten(door.get("title") or "Reference", width=22, placeholder="..")
+            # Paper title + Year
+            raw_title = door.get("title") or "Reference"
+            year_str = f" ({door.get('year')})" if door.get("year") else ""
+            d_title = textwrap.shorten(f"{raw_title}{year_str}", width=24, placeholder="..")
             d.text((dx + 8, dy + 30), d_title, font=F_SMALL, fill=WHITE)
 
             # Sub-badge (Cost / Free)
@@ -257,10 +267,15 @@ def main() -> None:
         ("IT CAN READ", F_BIG, ORANGE),
     ], sub="MaleCNS v1.0 Connectome (CC-BY) x OpenAlex (CC0). Open access = corridor, paywalls = walls.")
 
-    steps = [s for s in trace["steps"] if s.get("to") or s.get("bumps")]
-    # Select 10 to 14 sequential steps to provide clear, digestible arcade pacing
-    n_display_steps = min(len(steps), 12)
-    selected_steps = steps[:n_display_steps] if n_display_steps else steps
+    # Filter out steps that have no motion or bumps
+    valid_steps = [s for s in trace["steps"] if s.get("to") or s.get("bumps")]
+
+    # Sample up to 12 distinct sequential decision steps across the walk
+    if len(valid_steps) > 12:
+        indices = np.linspace(0, len(valid_steps) - 1, 12, dtype=int)
+        selected_steps = [valid_steps[i] for i in indices]
+    else:
+        selected_steps = valid_steps
 
     frames = [np.asarray(title)] * (2 * FPS)
     papers_read = 1
@@ -280,27 +295,37 @@ def main() -> None:
         target_id = s.get("to")
         bump_ids = s.get("bumps", [])
 
-        # Build door candidate list (chosen target + paywalled bumps)
+        # Build distinct doorway candidates, deduplicating by normalized title and ID
+        seen_titles = set()
         doors = []
+
         if target_id and target_id in nodes_map:
-            doors.append(nodes_map[target_id])
-        for bid in bump_ids[:3]:
-            if bid in nodes_map and nodes_map[bid] not in doors:
-                doors.append(nodes_map[bid])
+            t_node = nodes_map[target_id]
+            doors.append(t_node)
+            seen_titles.add(norm_title(t_node.get("title", "")))
+
+        for bid in bump_ids:
+            if len(doors) >= 4:
+                break
+            if bid in nodes_map:
+                b_node = nodes_map[bid]
+                t_key = norm_title(b_node.get("title", ""))
+                if b_node.get("id") not in [d.get("id") for d in doors] and t_key not in seen_titles:
+                    doors.append(b_node)
+                    seen_titles.add(t_key)
 
         if not doors:
             continue
 
         n_doors = len(doors)
         room_w = room_x2 - room_x1
-        door_w = min(180, (room_w - 40) // n_doors - 14)
+        door_w = min(190, (room_w - 40) // n_doors - 14)
         total_doors_w = n_doors * door_w + (n_doors - 1) * 14
         start_dx = room_x1 + (room_w - total_doors_w) // 2
 
         # 1. Bump animation phase (if paywall encountered)
         if bump_ids:
             paywalls_hit += len(bump_ids)
-            # Fly walks toward wall, hits it, screen shakes, fly recoils
             bump_target_x = start_dx + (min(len(doors) - 1, 1)) * (door_w + 14) + door_w // 2
             bump_target_y = room_y1 + 130
             bump_frames = min(18, frames_per_decision // 2)

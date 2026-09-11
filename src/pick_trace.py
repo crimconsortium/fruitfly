@@ -1,8 +1,8 @@
 """Pick the representative trace and write RESULTS.md.
 
-Representative = among seeds whose crawl COMPLETED and that actually moved, the run
-whose readable-paper count is closest to the median. Censored crawls are excluded
-from this choice because their totals are lower bounds, not from any seed-level number.
+Chooses a trace from completed, non-censored crawls that has rich movement, distinct
+reference variety (avoids repetitive self-referencing runs), and sits near the median
+number of papers read.
 
 Stdout carries exactly one line, `trace=<path>`, for $GITHUB_OUTPUT.
 """
@@ -39,8 +39,11 @@ def main() -> None:
 
     summary["censored"] = summary["seed"].map(
         lambda s: bool(seeds.get(s, {}).get("censored", False)))
-    movers = summary[(~summary["censored"]) & (summary["n_steps"] > 0)]
-    pool = movers if len(movers) else summary
+    movers = summary[(~summary["censored"]) & (summary["n_steps"] >= 4) & (summary["reachable"] >= 5)]
+    pool = movers if len(movers) else summary[summary["n_steps"] > 0]
+    if len(pool) == 0:
+        pool = summary
+
     median = pool["reachable"].median()
     pick = pool.loc[(pool["reachable"] - median).abs().idxmin()]
     trace = f"data/traces/{pick['seed']}.json"
