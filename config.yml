@@ -15,3 +15,18 @@ policy:
 resolver:
   # Below this fuzzy-match score, a row is flagged CHECK for human review.
   min_match_score: 0.92
+
+connectome:
+  dataset: "male-cns:v1.0"
+  # Drop weak connections. 5 synapses is the common threshold in this dataset.
+  min_synapses: 5
+  # We keep the readout neurons plus everything within N hops upstream of them.
+  hops_upstream_of_readout: 2
+  max_neurons: 20000
+  max_edges: 3000000
+  # Readout population: descending neurons carry brain output to the nerve cord.
+  readout_class_pattern: "descending"
+  readout_type_prefix: "DN"
+  # Sign convention for predicted neurotransmitters.
+  excitatory: [acetylcholine, ach, dopamine, da, octopamine, oct, serotonin, 5ht, histamine]
+  inhibitory: [gaba, glutamate, glu]
