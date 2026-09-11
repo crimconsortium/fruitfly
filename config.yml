@@ -23,25 +23,31 @@ resolver:
 citations:
   n_seeds: 100
   rng_seed: 20260911
-  # Stopping rule: run until stuck. These are safety valves, not the rule.
-  max_nodes_per_seed: 300
-  max_depth: 8
+  # Stopping rule: run until stuck. The cap below is a compute guard, NOT the rule.
+  #
+  # It was 300, and 24 of the 25 open seeds hit it. Crawls that hit the cap are
+  # CENSORED observations: their reachable totals are lower bounds. They are never
+  # dropped from seed-level statistics, because hitting a compute guard says nothing
+  # about whether the seed paper was readable.
+  max_nodes_per_seed: 1500
+  max_depth: 4
   # references = follow reference lists backward, the way a literature review works.
-  # references_and_citing costs ~1 API call per node and is off by default.
   follow: references
   batch_size: 50
 
 connectome:
   dataset: "male-cns:v1.0"
-  # Drop weak connections. 5 synapses is the common threshold in this dataset.
   min_synapses: 5
-  # We keep the readout neurons plus everything within N hops upstream of them.
   hops_upstream_of_readout: 2
   max_neurons: 20000
   max_edges: 3000000
-  # Readout population: descending neurons carry brain output to the nerve cord.
   readout_class_pattern: "descending"
   readout_type_prefix: "DN"
-  # Sign convention for predicted neurotransmitters.
   excitatory: [acetylcholine, ach, dopamine, da, octopamine, oct, serotonin, 5ht, histamine]
   inhibitory: [gaba, glutamate, glu]
+
+calibration:
+  # One shuffle is an anecdote. Report a distribution.
+  shuffle_replicates: 5
+  target_mean_hz: 10.0
+  trials: 64

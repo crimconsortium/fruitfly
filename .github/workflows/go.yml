@@ -1,13 +1,11 @@
 # The only workflow you need. Click Actions -> go -> Run workflow.
 #
-# It does everything in one run: resolve journals, crawl the OA-gated citation
+# Runs tests, then the whole pipeline: resolve journals, crawl the OA-gated citation
 # closure, build and calibrate the connectome, run the fly on every seed, pick a
 # representative trace, render the video, and write RESULTS.md.
 #
 # On success: site/fly.mp4, site/fly.gif, and RESULTS.md are committed.
 # On failure: a GitHub issue is opened with a link to the log.
-#
-# The stage-specific workflows still exist if you want to re-run one piece.
 
 name: go
 
@@ -21,7 +19,7 @@ permissions:
 jobs:
   everything:
     runs-on: ubuntu-latest
-    timeout-minutes: 180
+    timeout-minutes: 240
     steps:
       - uses: actions/checkout@v4
 
@@ -31,6 +29,9 @@ jobs:
 
       - name: Install dependencies
         run: pip install -r requirements.txt
+
+      - name: 0/6 Statistics regression tests
+        run: pytest -q tests/
 
       - name: Free disk space for the 1.1 GB connectome download
         run: |
@@ -50,7 +51,7 @@ jobs:
       - name: 3/6 Build the pruned MaleCNS connectome
         run: python src/build_connectome.py
 
-      - name: 4/6 Calibrate, and run the shuffled-connectome control
+      - name: 4/6 Calibrate, and run the shuffled-connectome controls
         env:
           PYTHONPATH: src
         run: python src/calibrate.py
@@ -85,4 +86,4 @@ jobs:
         run: |
           gh issue create \
             --title "fruitfly pipeline failed (run #${{ github.run_number }})" \
-            --body "The \`go\` workflow failed. The step name says which stage.$(printf '\n\n')Log: $RUN_URL$(printf '\n\n')Most likely cause: a column name in the MaleCNS Feather files did not match the auto-detect candidates in src/build_connectome.py. The log prints the real column names.$(printf '\n\n')Paste the last ~20 lines of the log to get this fixed."
+            --body "The \`go\` workflow failed. The step name says which stage.$(printf '\n\n')Log: $RUN_URL$(printf '\n\n')Paste the last ~20 lines of the log to get this fixed."
