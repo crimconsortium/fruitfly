@@ -1,0 +1,88 @@
+# The only workflow you need. Click Actions -> go -> Run workflow.
+#
+# It does everything in one run: resolve journals, crawl the OA-gated citation
+# closure, build and calibrate the connectome, run the fly on every seed, pick a
+# representative trace, render the video, and write RESULTS.md.
+#
+# On success: site/fly.mp4, site/fly.gif, and RESULTS.md are committed.
+# On failure: a GitHub issue is opened with a link to the log.
+#
+# The stage-specific workflows still exist if you want to re-run one piece.
+
+name: go
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  everything:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Free disk space for the 1.1 GB connectome download
+        run: |
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/lib/android || true
+          df -h /
+
+      - name: 1/6 Resolve the Web of Science journal list against OpenAlex
+        env:
+          OPENALEX_MAILTO: ${{ vars.OPENALEX_MAILTO }}
+        run: python src/fetch_sources.py
+
+      - name: 2/6 Crawl the OA-gated citation closure
+        env:
+          OPENALEX_MAILTO: ${{ vars.OPENALEX_MAILTO }}
+        run: python src/fetch_citations.py
+
+      - name: 3/6 Build the pruned MaleCNS connectome
+        run: python src/build_connectome.py
+
+      - name: 4/6 Calibrate, and run the shuffled-connectome control
+        env:
+          PYTHONPATH: src
+        run: python src/calibrate.py
+
+      - name: 5/6 Run the fly on every seed
+        run: python src/engine.py --all
+
+      - name: 6/6 Pick a representative trace and write RESULTS.md
+        id: pick
+        run: python src/pick_trace.py >> "$GITHUB_OUTPUT"
+
+      - name: Render the video
+        run: python src/render.py --trace "${{ steps.pick.outputs.trace }}" --seconds 20
+
+      - name: Commit everything
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/ site/ RESULTS.md
+          git diff --staged --quiet || git commit -m "run: full pipeline"
+          git push
+
+      - name: Put the results in the run summary
+        if: always()
+        run: cat RESULTS.md >> "$GITHUB_STEP_SUMMARY" || true
+
+      - name: Open an issue if this failed
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          gh issue create \
+            --title "fruitfly pipeline failed (run #${{ github.run_number }})" \
+            --body "The \`go\` workflow failed. The step name says which stage.$(printf '\n\n')Log: $RUN_URL$(printf '\n\n')Most likely cause: a column name in the MaleCNS Feather files did not match the auto-detect candidates in src/build_connectome.py. The log prints the real column names.$(printf '\n\n')Paste the last ~20 lines of the log to get this fixed."
