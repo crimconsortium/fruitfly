@@ -1,18 +1,18 @@
 {
   "seed": {
-    "id": "W2977893088",
-    "title": "Predictors and Contexts of Unsolved and Solved Sexual Offenses",
-    "journal": "Crime & Delinquency",
-    "year": 2019,
+    "id": "W1482468881",
+    "title": "Spousal Assaulters in Outpatient Mental Health Care: The Relevance of Structured Risk Assessment",
+    "journal": "Journal of Interpersonal Violence",
+    "year": 2015,
     "oa_status": "green",
     "passable": true
   },
   "result": {
-    "visited": 6,
-    "reachable": 6,
-    "walls_hit": 99,
-    "n_steps": 6,
-    "stuck_at": "W2060777962",
+    "visited": 141,
+    "reachable": 141,
+    "walls_hit": 5248,
+    "n_steps": 141,
+    "stuck_at": "W4395472190",
     "stuck_reason": "no_passable_neighbours",
     "censored": false,
     "truncated": false

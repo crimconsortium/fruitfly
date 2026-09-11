@@ -62,17 +62,14 @@ Replicates: `[0.9531, 0.8594, 0.875, 1.0, 0.75]`
 
 ## The rendered run
 
-- Trace: `data/traces/W2977893088.json`
-- Seed paper: Predictors and Contexts of Unsolved and Solved Sexual Offenses
-- Journal: Crime & Delinquency (2019)
+- Trace: `data/traces/W1482468881.json`
+- Seed paper: Spousal Assaulters in Outpatient Mental Health Care: The Relevance of Structured Risk Assessment
+- Journal: Journal of Interpersonal Violence (2015)
 - Seed access: green
-- Papers read: 6
-- Paywalls hit: 99
-- Moves: 6
+- Papers read: 141
+- Paywalls hit: 5248
+- Moves: 141
 - Ended because: no_passable_neighbours
-
-Chosen from completed, non-censored crawls that actually moved, as the run
-closest to the median reachable count. Not the most dramatic one.
 
 ## Provenance
 
