@@ -1,0 +1,53 @@
+# Answers one question in about a minute: is the open-access detection working,
+# or is criminology really 99% walled at the seed?
+#
+# Prints the report into the run summary and commits data/diagnostics.json.
+
+name: diagnose
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install requests pyyaml pandas pyarrow
+
+      - name: Require resolved sources
+        run: test -f data/sources.csv || (echo "Run the go workflow first." && exit 1)
+
+      - name: Diagnose open-access detection
+        env:
+          OPENALEX_MAILTO: ${{ vars.OPENALEX_MAILTO }}
+        run: python src/diagnose_oa.py
+
+      - name: Commit diagnostics
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/diagnostics.json
+          git diff --staged --quiet || git commit -m "data: OA detection diagnostics"
+          git push
+
+      - name: Open an issue if this failed
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          gh issue create \
+            --title "diagnose failed (run #${{ github.run_number }})" \
+            --body "Log: $RUN_URL"
