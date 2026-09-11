@@ -108,7 +108,7 @@ fetch('stats.json').then(r => r.json()).then(s => {
   const r = s.result || {}, c = s.calibration || {};
   const pct = x => (x === null || x === undefined) ? 'n/a' : (x * 100).toFixed(0) + '%';
   document.getElementById('stats').innerHTML = [
-    ['papers reached', r.reachable],
+    ['papers read', r.reachable],
     ['paywalls hit', r.walls_hit],
     ['moves', r.n_steps],
     ['neurons simulated', ((s.engine || {}).neurons || 0).toLocaleString()]

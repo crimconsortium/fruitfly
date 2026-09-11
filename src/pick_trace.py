@@ -1,7 +1,7 @@
 """Pick the representative trace and write RESULTS.md.
 
 Representative = among seeds whose crawl COMPLETED and that actually moved, the run
-whose reachable-paper count is closest to the median. Censored crawls are excluded
+whose readable-paper count is closest to the median. Censored crawls are excluded
 from this choice because their totals are lower bounds, not from any seed-level number.
 
 Stdout carries exactly one line, `trace=<path>`, for $GITHUB_OUTPUT.
@@ -78,8 +78,8 @@ def main() -> None:
         f"| Crawls completed | {cs.get('n_complete', 'n/a')} |",
         f"| Crawls censored at the {cs.get('cap', 'n/a')}-paper cap | {cs.get('n_censored', 'n/a')} |",
         f"| Share of open seeds censored | {pct(cs.get('share_of_open_seeds_censored'))} |",
-        f"| Median papers beyond the seed (completed only) | {num(cc.get('median_reachable_beyond_seed'), 0)} |",
-        f"| Max papers beyond the seed (completed only) | {num(cc.get('max_reachable_beyond_seed'), 0)} |",
+        f"| Median papers read beyond the seed (completed only) | {num(cc.get('median_reachable_beyond_seed'), 0)} |",
+        f"| Max papers read beyond the seed (completed only) | {num(cc.get('max_reachable_beyond_seed'), 0)} |",
         f"| Median paywalls hit (completed only) | {num(cc.get('median_walls'), 0)} |",
         "",
         f"{cs.get('censored_crawls_note', '')}",
@@ -130,7 +130,7 @@ def main() -> None:
         f"- Seed paper: {meta.get('title') or 'n/a'}",
         f"- Journal: {meta.get('journal') or 'n/a'} ({meta.get('year') or 'n/a'})",
         f"- Seed access: {meta.get('seed_oa_status') or 'n/a'}",
-        f"- Papers reached: {int(pick['reachable'])}",
+        f"- Papers read: {int(pick['reachable'])}",
         f"- Paywalls hit: {int(pick['walls_hit'])}",
         f"- Moves: {int(pick['n_steps'])}",
         f"- Ended because: {pick['stuck_reason']}",

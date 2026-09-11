@@ -1,15 +1,15 @@
 """Render a trace/v1 file to an MP4 and a looping GIF.
 
 Reads only the trace. Draws only what the trace contains: no invented spikes, no
-smoothed-over gaps. The right panel shows the actual per-channel descending-neuron
-readout values recorded at each decision, and nothing else.
+smoothed-over gaps.
 
-Layout is a deterministic spring layout seeded from the trace, so the same trace always
-produces the same video.
-
-Calibration is read through src/calib.py. Run #4 died here on a direct index into
-calib['selectivity_shuffled'] after that field was renamed; nothing in this file
-indexes calibration any more.
+LAYOUT:
+  - Left 65%: The Browser / Reading View. Shows the manuscript card the fly is
+    inspecting: Title, Journal, Year, Access Status badge (OPEN vs PAYWALLED/BRONZE),
+    plus live citations and references. The Fly is prominently visible (large animated
+    sprite) sitting on / examining the paper. When bumping a paywall, an alert banner
+    and visual recoil trigger.
+  - Right 35%: Connectome Readout & Live Counters (Papers Read, Paywalls Hit, Firing Rate).
 
   python src/render.py --trace data/traces/W123.json
 
@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import textwrap
 from pathlib import Path
 
 import imageio.v2 as imageio
@@ -31,21 +32,18 @@ ROOT = Path(__file__).resolve().parent.parent
 SITE = ROOT / "site"
 
 W, H, FPS = 1280, 720, 30
-LEFT_W = int(W * 0.70)
+LEFT_W = int(W * 0.65)
 PAD = 28
 
 BLACK = (0, 0, 0)
 ORANGE = (246, 130, 18)
 WHITE = (245, 245, 245)
-GREY = (110, 110, 110)
-DARK = (38, 38, 38)
-
-TERRAIN_COLOR = {
-    "corridor": WHITE,
-    "gate": (200, 140, 60),
-    "trapdoor": (120, 70, 20),
-    "wall": DARK,
-}
+GREY = (140, 140, 140)
+DARK_BG = (16, 16, 16)
+CARD_BG = (24, 24, 24)
+BORDER_COL = (45, 45, 45)
+GREEN = (46, 204, 113)
+RED = (231, 76, 60)
 
 FONT_PATHS = [
     "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
@@ -53,109 +51,135 @@ FONT_PATHS = [
 ]
 
 
-def font(size: int):
-    for p in FONT_PATHS:
-        if Path(p).exists():
-            return ImageFont.truetype(p, size)
+def font(size: int, bold: bool = False):
+    p = FONT_PATHS[0] if bold else FONT_PATHS[1]
+    if Path(p).exists():
+        return ImageFont.truetype(p, size)
+    for alt in FONT_PATHS:
+        if Path(alt).exists():
+            return ImageFont.truetype(alt, size)
     return ImageFont.load_default()
 
 
-F_BIG, F_MID, F_SMALL, F_TINY = font(54), font(30), font(20), font(15)
+F_BIG = font(44, bold=True)
+F_MID = font(26, bold=True)
+F_BODY = font(18)
+F_BODY_B = font(18, bold=True)
+F_SMALL = font(15)
+F_TINY = font(13)
 
 
-def layout(nodes, edges, seed: int):
-    ids = [n["id"] for n in nodes]
-    idx = {k: i for i, k in enumerate(ids)}
-    n = len(ids)
-    rng = np.random.default_rng(seed)
-    pos = rng.random((n, 2)) * 2 - 1
-    link = np.array([[idx[a], idx[b]] for a, b in edges if a in idx and b in idx])
-    k = 1.0 / max(np.sqrt(n), 1)
-    for step in range(220):
-        delta = pos[:, None, :] - pos[None, :, :]
-        dist = np.linalg.norm(delta, axis=-1) + 1e-6
-        rep = (k ** 2 / dist ** 2)[..., None] * delta
-        force = rep.sum(axis=1)
-        if len(link):
-            d = pos[link[:, 0]] - pos[link[:, 1]]
-            dl = np.linalg.norm(d, axis=1, keepdims=True) + 1e-6
-            att = d * (dl / k)
-            np.add.at(force, link[:, 0], -att)
-            np.add.at(force, link[:, 1], att)
-        pos += force * (0.05 * (1 - step / 220))
-        pos = np.clip(pos, -1.5, 1.5)
-    lo, hi = pos.min(axis=0), pos.max(axis=0)
-    span = np.maximum(hi - lo, 1e-6)
-    pos = (pos - lo) / span
-    px = PAD + 44 + pos[:, 0] * (LEFT_W - 2 * PAD - 88)
-    py = PAD + 74 + pos[:, 1] * (H - 2 * PAD - 148)
-    return {ids[i]: (float(px[i]), float(py[i])) for i in range(n)}
-
-
-def draw_fly(d: ImageDraw.ImageDraw, x: float, y: float, wings_up: bool, s: int = 5):
-    body = [(0, -2), (0, -1), (0, 0), (0, 1), (-1, -1), (1, -1), (-1, 0), (1, 0)]
+def draw_fly_large(d: ImageDraw.ImageDraw, x: float, y: float, wings_up: bool, s: int = 8, alert: bool = False):
+    """Draw a large, distinct fruit fly pixel character inspecting the page."""
+    body = [
+        (0, -3), (0, -2), (0, -1), (0, 0), (0, 1), (0, 2), (0, 3),
+        (-1, -2), (1, -2), (-1, -1), (1, -1), (-1, 0), (1, 0),
+        (-1, 1), (1, 1), (-1, 2), (1, 2), (-2, 0), (2, 0), (-2, 1), (2, 1)
+    ]
+    b_col = (240, 240, 240) if not alert else (255, 100, 100)
     for bx, by in body:
-        d.rectangle([x + bx * s, y + by * s, x + bx * s + s, y + by * s + s], fill=(232, 232, 232))
-    for ex in (-1, 1):
+        d.rectangle([x + bx * s, y + by * s, x + bx * s + s, y + by * s + s], fill=b_col)
+
+    # Eyes: bright orange compound eyes
+    for ex in (-2, 2):
+        d.rectangle([x + ex * s, y - 4 * s, x + ex * s + s, y - 3 * s], fill=ORANGE)
         d.rectangle([x + ex * s, y - 3 * s, x + ex * s + s, y - 2 * s], fill=ORANGE)
-    wy = -2 if wings_up else 0
-    for wx in (-3, -2, 2, 3):
-        d.rectangle([x + wx * s, y + wy * s, x + wx * s + s, y + wy * s + s], fill=(160, 160, 160))
+
+    # Wings: fluttering translucent wings
+    wy = -4 if wings_up else -1
+    w_col = (180, 180, 190)
+    for wx in (-5, -4, -3, 3, 4, 5):
+        d.rectangle([x + wx * s, y + wy * s, x + wx * s + s, y + wy * s + s], fill=w_col)
+        d.rectangle([x + wx * s, y + (wy + 1) * s, x + wx * s + s, y + (wy + 1) * s + s], fill=w_col)
+
+    # Legs
+    leg_col = (100, 100, 100)
+    for lx, ly in [(-3, -2), (-4, 0), (-3, 3), (3, -2), (4, 0), (3, 3)]:
+        d.rectangle([x + lx * s, y + ly * s, x + lx * s + s, y + ly * s + s], fill=leg_col)
 
 
-def panel_frame(trace, pos, visited, current_xy, bumps, step, wings_up, subtitle):
+def panel_frame(trace, current_node, is_bump, step, wings_up, fly_xy, papers_read, paywalls_hit):
     img = Image.new("RGB", (W, H), BLACK)
     d = ImageDraw.Draw(img)
-    nodes = {n["id"]: n for n in trace["nodes"]}
 
-    d.line([LEFT_W, 0, LEFT_W, H], fill=DARK, width=2)
-    d.text((PAD, PAD), "A FRUIT FLY LOOKS FOR CRIMINOLOGY IT CAN READ", font=F_SMALL, fill=ORANGE)
-    d.text((PAD, PAD + 26), subtitle, font=F_TINY, fill=GREY)
+    # Divider
+    d.line([LEFT_W, 0, LEFT_W, H], fill=BORDER_COL, width=2)
 
-    for a, b in trace["_edges"]:
-        if a in pos and b in pos:
-            passable = nodes.get(b, {}).get("passable")
-            col = (60, 60, 60) if passable else (28, 28, 28)
-            d.line([pos[a], pos[b]], fill=col, width=1)
+    # Header
+    d.text((PAD, PAD), "A FRUIT FLY LOOKS FOR CRIMINOLOGY IT CAN READ", font=F_MID, fill=ORANGE)
+    d.text((PAD, PAD + 32), "Real MaleCNS v1.0 connectome inspecting OpenAlex literature", font=F_SMALL, fill=GREY)
 
-    for nid, (x, y) in pos.items():
-        node = nodes.get(nid, {})
-        terrain = node.get("terrain", "wall")
-        col = TERRAIN_COLOR.get(terrain, DARK)
-        r = 6 if node.get("passable") else 5
-        if nid in bumps:
-            d.ellipse([x - 13, y - 13, x + 13, y + 13], outline=ORANGE, width=3)
-        if terrain == "wall":
-            d.rectangle([x - r, y - r, x + r, y + r], fill=col, outline=(70, 70, 70))
-        elif terrain == "trapdoor":
-            d.rectangle([x - r, y - r, x + r, y + r], fill=col, outline=ORANGE)
-            d.line([x - r, y + r, x + r, y - r], fill=BLACK, width=1)
-        else:
-            d.ellipse([x - r, y - r, x + r, y + r], fill=col)
-        if nid in visited:
-            d.ellipse([x - r - 4, y - r - 4, x + r + 4, y + r + 4], outline=ORANGE, width=2)
+    # Manuscript Browser Card (Left area)
+    card_x1, card_y1 = PAD, PAD + 64
+    card_x2, card_y2 = LEFT_W - PAD, H - PAD - 40
+    d.rectangle([card_x1, card_y1, card_x2, card_y2], fill=CARD_BG, outline=BORDER_COL, width=2)
 
-    draw_fly(d, current_xy[0], current_xy[1], wings_up)
+    # Header inside manuscript card
+    d.rectangle([card_x1, card_y1, card_x2, card_y1 + 44], fill=(32, 32, 32))
+    d.text((card_x1 + 16, card_y1 + 12), "CURRENT PAPER METADATA", font=F_TINY, fill=GREY)
 
+    # Status Badge
+    oa_status = (current_node.get("oa_status") or "unknown").upper()
+    passable = current_node.get("passable", False)
+    badge_col = GREEN if passable else RED
+    badge_txt = f"[{oa_status} - READABLE]" if passable else f"[{oa_status} - PAYWALLED]"
+    d.text((card_x2 - 190, card_y1 + 12), badge_txt, font=F_BODY_B, fill=badge_col)
+
+    # Paper Title (wrapped)
+    title_raw = current_node.get("title") or "Unknown Title"
+    lines = textwrap.wrap(title_raw, width=44)
+    ty = card_y1 + 64
+    for line in lines[:3]:
+        d.text((card_x1 + 20, ty), line, font=F_MID, fill=WHITE)
+        ty += 32
+
+    # Journal & Year
+    j_name = current_node.get("journal") or "Unknown Journal"
+    yr = current_node.get("year") or ""
+    d.text((card_x1 + 20, ty + 10), f"Journal: {j_name} ({yr})", font=F_BODY_B, fill=ORANGE)
+
+    # Inspection details / Abstract simulation
+    d.line([card_x1 + 20, ty + 44, card_x2 - 20, ty + 44], fill=BORDER_COL, width=1)
+    d.text((card_x1 + 20, ty + 56), "Citation Network Status:", font=F_SMALL, fill=GREY)
+
+    cites = current_node.get("cited_by_count", 0)
+    d.text((card_x1 + 20, ty + 80), f"- Total citations recorded: {cites}", font=F_BODY, fill=WHITE)
+
+    if is_bump:
+        # Visual alert when hitting a wall
+        d.rectangle([card_x1 + 20, ty + 120, card_x2 - 20, ty + 170], fill=(60, 20, 20), outline=RED, width=2)
+        d.text((card_x1 + 36, ty + 132), "ACCESS DENIED: Paywall encountered!", font=F_BODY_B, fill=RED)
+    else:
+        d.rectangle([card_x1 + 20, ty + 120, card_x2 - 20, ty + 170], fill=(20, 45, 25), outline=GREEN, width=1)
+        d.text((card_x1 + 36, ty + 132), "FULL TEXT ACCESSED: Paper read successfully.", font=F_BODY_B, fill=GREEN)
+
+    # Large Animated Fly inspecting the document
+    draw_fly_large(d, fly_xy[0], fly_xy[1], wings_up, s=7, alert=is_bump)
+
+    # Footer on left
+    d.text((PAD, H - PAD - 20), "MaleCNS v1.0 Connectome (CC-BY) x OpenAlex (CC0)", font=F_TINY, fill=GREY)
+
+    # Right Panel: HUD & Spikes
     x0 = LEFT_W + PAD
     d.text((x0, PAD), "DESCENDING-NEURON READOUT", font=F_TINY, fill=ORANGE)
     d.text((x0, PAD + 20), "mean spikes per channel", font=F_TINY, fill=GREY)
+
     cands = step.get("candidates", []) if step else []
-    top = max([c["readout_spikes"] for c in cands], default=1.0) or 1.0
+    top = max([c.get("readout_spikes", 0) for c in cands], default=1.0) or 1.0
     bar_y = PAD + 56
     for i in range(8):
-        val = next((c["readout_spikes"] for c in cands if c["channel"] == i), 0.0)
+        val = next((c.get("readout_spikes", 0) for c in cands if c.get("channel") == i), 0.0)
         w_bar = int((val / top) * (W - x0 - PAD - 46))
         d.text((x0, bar_y), f"{i}", font=F_TINY, fill=GREY)
         d.rectangle([x0 + 18, bar_y, x0 + 18 + max(w_bar, 1), bar_y + 14],
                     fill=ORANGE if val == top and val > 0 else (90, 90, 90))
         bar_y += 24
 
-    y2 = bar_y + 26
-    d.text((x0, y2), f"papers reached   {len(visited)}", font=F_SMALL, fill=WHITE)
-    d.text((x0, y2 + 28), f"walls hit        {trace['_walls_so_far']}", font=F_SMALL, fill=WHITE)
+    y2 = bar_y + 36
+    d.text((x0, y2), f"papers read      {papers_read}", font=F_MID, fill=WHITE)
+    d.text((x0, y2 + 38), f"paywalls hit     {paywalls_hit}", font=F_MID, fill=ORANGE)
     if step:
-        d.text((x0, y2 + 56), f"spikes this step {step.get('total_spikes', 0):,}",
+        d.text((x0, y2 + 76), f"spikes this step {step.get('total_spikes', 0):,}",
                font=F_SMALL, fill=GREY)
 
     d.text((x0, H - PAD - 42), "CRIMCONSORTIUM", font=F_SMALL, fill=ORANGE)
@@ -187,53 +211,51 @@ def main() -> None:
     trace = json.loads(Path(args.trace).read_text())
     SITE.mkdir(exist_ok=True)
 
-    edge_pairs = []
-    for s in trace["steps"]:
-        for c in s["candidates"]:
-            edge_pairs.append((s["at"], c["id"]))
-        for b in s["bumps"]:
-            edge_pairs.append((s["at"], b))
-    trace["_edges"] = list(dict.fromkeys(edge_pairs))
-    trace["_walls_so_far"] = 0
-    pos = layout(trace["nodes"], trace["_edges"], trace["engine"]["rng_seed"])
-
+    nodes_map = {n["id"]: n for n in trace["nodes"]}
     calib = trace.get("calibration") or {}
     seed = trace["seed"]
+
     title = card([
         ("A FRUIT FLY", F_BIG, WHITE),
         ("LOOKS FOR CRIMINOLOGY", F_BIG, WHITE),
         ("IT CAN READ", F_BIG, ORANGE),
     ], sub="MaleCNS v1.0 connectome (CC-BY) x OpenAlex (CC0). Open access = diamond, gold, green, hybrid.")
 
-    steps = [s for s in trace["steps"] if s.get("to")]
+    steps = [s for s in trace["steps"] if s.get("to") or s.get("bumps")]
     total_frames = int(args.seconds * FPS)
     title_frames, card_frames = 2 * FPS, 4 * FPS
     walk_frames = max(total_frames - title_frames - card_frames, FPS)
-    per_step = max(3, walk_frames // max(len(steps), 1))
+    per_step = max(6, walk_frames // max(len(steps), 1))
 
     frames = [np.asarray(title)] * title_frames
-    visited, walls = {trace["seed"]["id"]}, 0
-    subtitle = f"seed: {(seed.get('journal') or '?')[:44]} ({seed.get('oa_status')})"
+    papers_read = 1
+    paywalls_hit = 0
 
-    for s in steps:
-        walls += len(s["bumps"])
-        trace["_walls_so_far"] = walls
-        a, b = pos.get(s["at"]), pos.get(s["to"])
-        if a is None or b is None:
-            continue
+    fly_base_x = LEFT_W - 140
+    fly_base_y = H // 2 + 60
+
+    for s_idx, s in enumerate(steps):
+        target_id = s.get("to") or s.get("at")
+        curr_node = nodes_map.get(target_id, seed)
+        bumps = s.get("bumps", [])
+        paywalls_hit += len(bumps)
+        if s.get("to") and curr_node.get("passable"):
+            papers_read += 1
+
         for f in range(per_step):
-            t = f / per_step
-            xy = (a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t)
-            img = panel_frame(trace, pos, visited, xy,
-                              set(s["bumps"]) if f < per_step // 2 else set(),
-                              s, (f // 3) % 2 == 0, subtitle)
+            wings_up = (f // 3) % 2 == 0
+            bob_x = fly_base_x + int(np.sin(f * 0.4) * 15)
+            bob_y = fly_base_y + int(np.cos(f * 0.3) * 10)
+            is_bump_frame = bool(bumps) and (f < per_step // 2)
+
+            img = panel_frame(trace, curr_node, is_bump_frame, s, wings_up, (bob_x, bob_y),
+                              papers_read, paywalls_hit)
             frames.append(np.asarray(img))
-        visited.add(s["to"])
 
     r = trace["result"]
     sel = summary_line(calib)
     end = card([
-        (f"{r['reachable']} papers reached", F_BIG, WHITE),
+        (f"{r['reachable']} papers read", F_BIG, WHITE),
         (f"{r['walls_hit']} paywalls hit", F_BIG, ORANGE),
         ("then it ran out of open access", F_MID, GREY),
     ], sub=sel or "fruitfly.crimconsortium.com")
