@@ -50,13 +50,13 @@ Open under our rule: **31%**. Including bronze: 35%.
 
 | Measure | Value |
 |---|---|
-| Real connectome selectivity | 36% |
-| Shuffled controls, mean of 5 | 89% |
-| Shuffled controls, sd | 10% |
+| Real connectome selectivity | 41% |
+| Shuffled controls, mean of 5 | 82% |
+| Shuffled controls, sd | 8% |
 | Chance | 12% |
-| Mean firing rate achieved | 11.45 Hz |
+| Mean firing rate achieved | 9.93 Hz |
 
-Replicates: `[0.9531, 0.8594, 0.875, 1.0, 0.75]`
+Replicates: `[0.875, 0.875, 0.7344, 0.7188, 0.875]`
 
 **The shuffles BEAT the real wiring by more than two standard deviations. That is not a finding about brains, it is a warning about our metric: the selectivity measure is picking up something the shuffle supplies more of than reality does. Reported, not tuned away.**
 
@@ -73,7 +73,7 @@ Replicates: `[0.9531, 0.8594, 0.875, 1.0, 0.75]`
 
 ## Provenance
 
-- Connectome: male-cns:v1.0, 20000 neurons and 1017037 signed edges after pruning. CC-BY.
+- Connectome: male-cns:v1.0, 20000 neurons and 1016133 signed edges after pruning. CC-BY.
 - Journals: Web of Science Criminology & Penology, adopted as-is. See corpus/PROVENANCE.md.
 - Metadata: OpenAlex, CC0.
 

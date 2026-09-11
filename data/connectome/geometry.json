@@ -22,7 +22,7 @@
   },
   "simulated_coverage": {
     "n_simulated": 20000,
-    "n_simulated_placed": 17437,
+    "n_simulated_placed": 17436,
     "n_readout": 1342,
     "n_readout_placed": 1330
   }
