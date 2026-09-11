@@ -1,12 +1,20 @@
-"""Render an animated retro-arcade 'Corridor vs Paywall' game view of the fly foraging papers.
+"""Render an animated 'Single Paper Inspection' feed of the fly foraging criminology.
 
-Reflects real criminology literature access:
-  - Paywalls dominate: shows 3-5 locked paywall doors for every corridor.
-  - Aggressively deduplicates door candidates by first 3 significant title words and
-    filters out generic/blank titles like "Reference".
-  - Clear labeling: "Channel 0", "Channel 1" (no ambiguous 'Ch 0').
-  - Bump animation accurately hits the red locked paywall and recoils.
-  - Right panel: Live motor channel firing, spikes count, PAPERS READ vs PAYWALLS HIT.
+Radically simplified, clean visual model:
+  - EXACTLY ONE paper card on screen at a time in the center.
+  - No confusing rows of 4 doors or changing layouts.
+  - The animated fruit fly crawls across the manuscript inspection card.
+  - For each paper encountered:
+      * If OPEN ACCESS (Diamond/Gold/Green/Hybrid):
+          - Bright green header: [OPEN ACCESS - READABLE]
+          - Full paper title, journal, and year clearly readable.
+          - Fly crawls smoothly across the page, takes notes, and papers_read increments.
+      * If PAYWALLED (Closed / Bronze / Unresolved):
+          - Bright red header: [PAYWALLED - $39.95 / ACCESS DENIED]
+          - Heavy red locked barrier stamp slams across the card.
+          - Screen shake effect, fly bounces back / turns away, and paywalls_hit increments.
+  - Right panel: Live motor channel firing (Channel 0 to 7), total spikes,
+    and big retro arcade scorecards for PAPERS READ and PAYWALLS HIT.
 
   python src/render.py --trace data/traces/W123.json
 
@@ -16,7 +24,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import re
 import textwrap
 from pathlib import Path
 
@@ -31,19 +38,19 @@ SITE = ROOT / "site"
 
 W, H, FPS = 1280, 720, 30
 LEFT_W = int(W * 0.68)
-PAD = 24
+PAD = 28
 
-BLACK = (10, 10, 12)
-DARK_FLOOR = (22, 24, 28)
-GRID_LINE = (35, 38, 45)
+BLACK = (12, 13, 16)
+CARD_BG = (22, 24, 30)
+CARD_BORDER = (45, 48, 58)
 ORANGE = (246, 130, 18)
 WHITE = (245, 245, 245)
-GREY = (140, 140, 150)
-BORDER_COL = (50, 52, 60)
+GREY = (145, 150, 160)
+LIGHT_GREY = (200, 205, 215)
 GREEN = (46, 204, 113)
 RED = (231, 76, 60)
-DOOR_OPEN_BG = (25, 50, 35)
-DOOR_WALL_BG = (55, 25, 25)
+RED_BG = (55, 22, 24)
+GREEN_BG = (20, 50, 32)
 
 FONT_PATHS = [
     "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
@@ -61,23 +68,16 @@ def font(size: int, bold: bool = False):
     return ImageFont.load_default()
 
 
+F_BIG = font(40, bold=True)
 F_TITLE = font(22, bold=True)
-F_BIG = font(42, bold=True)
 F_MID = font(18, bold=True)
-F_BODY = font(15)
+F_BODY = font(16)
 F_SMALL = font(13)
 F_TINY = font(11)
 
-STOPWORDS = {"the", "a", "an", "and", "of", "in", "to", "for", "on", "with", "by", "at", "from"}
 
-
-def title_stem(t: str) -> str:
-    """Extract first 3 meaningful words to eliminate duplicate variants."""
-    words = [w for w in re.sub(r"[^\w\s]", "", (t or "").lower()).split() if w not in STOPWORDS]
-    return " ".join(words[:3]) if words else (t or "").lower().strip()
-
-
-def draw_fly_sprite(d: ImageDraw.ImageDraw, cx: float, cy: float, angle_deg: float, wings_up: bool, s: int = 5, alert: bool = False):
+def draw_fly(d: ImageDraw.ImageDraw, cx: float, cy: float, angle_deg: float, wings_up: bool, s: int = 7, alert: bool = False):
+    """Draw an animated 2D fly sprite with compound eyes and fluttering wings."""
     rad = np.radians(angle_deg)
     cos_a, sin_a = np.cos(rad), np.sin(rad)
 
@@ -91,96 +91,106 @@ def draw_fly_sprite(d: ImageDraw.ImageDraw, cx: float, cy: float, angle_deg: flo
         (-1, -2), (1, -2), (-1, -1), (1, -1), (-1, 0), (1, 0),
         (-1, 1), (1, 1), (-1, 2), (1, 2)
     ]
-    b_col = (240, 240, 240) if not alert else (255, 90, 90)
+    b_col = (245, 245, 245) if not alert else (255, 100, 100)
     for bx, by in body_pixels:
         px, py = rot(bx, by)
         d.rectangle([px - s / 2, py - s / 2, px + s / 2, py + s / 2], fill=b_col)
 
+    # Compound eyes
     for ex in (-2, 2):
         px, py = rot(ex, -3)
         d.rectangle([px - s / 2, py - s / 2, px + s / 2, py + s / 2], fill=ORANGE)
 
+    # Translucent wings
     wy = -4 if wings_up else -1
-    w_col = (175, 185, 205)
+    w_col = (180, 190, 210)
     for wx in (-5, -4, -3, 3, 4, 5):
         px, py = rot(wx, wy)
         d.rectangle([px - s / 2, py - s / 2, px + s / 2, py + s / 2], fill=w_col)
 
+    # Legs
     for lx, ly in [(-3, -2), (-4, 0), (-3, 2), (3, -2), (4, 0), (3, 2)]:
         px, py = rot(lx, ly)
-        d.rectangle([px - s / 2, py - s / 2, px + s / 2, py + s / 2], fill=(90, 90, 100))
+        d.rectangle([px - s / 2, py - s / 2, px + s / 2, py + s / 2], fill=(100, 105, 115))
 
 
-def draw_grid(d: ImageDraw.ImageDraw, x1, y1, x2, y2, cell=32):
-    for x in range(x1, x2, cell):
-        d.line([x, y1, x, y2], fill=GRID_LINE, width=1)
-    for y in range(y1, y2, cell):
-        d.line([x1, y, x2, y], fill=GRID_LINE, width=1)
-
-
-def render_room_frame(curr_paper, doors, fly_state, step_data, papers_read, paywalls_hit, shake_offset=(0, 0)):
+def render_single_paper_frame(paper, is_paywalled, encounter_num, total_encounters,
+                              fly_state, step_data, papers_read, paywalls_hit, shake=(0, 0)):
+    """Render ONE single clean paper card with the fly inspecting it."""
     img = Image.new("RGB", (W, H), BLACK)
     d = ImageDraw.Draw(img)
 
-    sx, sy = shake_offset
-    room_x1, room_y1 = PAD + sx, PAD + 54 + sy
-    room_x2, room_y2 = LEFT_W - PAD + sx, H - PAD - 20 + sy
+    sx, sy = shake
+    cx1, cy1 = PAD + sx, PAD + 54 + sy
+    cx2, cy2 = LEFT_W - PAD + sx, H - PAD - 20 + sy
 
-    d.rectangle([room_x1, room_y1, room_x2, room_y2], fill=DARK_FLOOR, outline=BORDER_COL, width=2)
-    draw_grid(d, room_x1 + 2, room_y1 + 2, room_x2 - 2, room_y2 - 2, cell=28)
-
-    # Current paper header
-    d.rectangle([room_x1, room_y1, room_x2, room_y1 + 60], fill=(20, 22, 28), outline=BORDER_COL, width=1)
-    curr_title = curr_paper.get("title") or "Unknown Seed Paper"
-    short_title = textwrap.shorten(curr_title, width=65, placeholder="...")
-    d.text((room_x1 + 14, room_y1 + 10), "CURRENT LOCATION (PAPER)", font=F_TINY, fill=GREY)
-    d.text((room_x1 + 14, room_y1 + 26), short_title, font=F_MID, fill=WHITE)
-    j_info = f"{(curr_paper.get('journal') or 'Journal')} ({curr_paper.get('year') or ''})"
-    d.text((room_x2 - d.textlength(j_info, font=F_SMALL) - 14, room_y1 + 10), j_info, font=F_SMALL, fill=ORANGE)
-
+    # Top Banner Header
     d.text((PAD, PAD + 10), "A FRUIT FLY LOOKS FOR CRIMINOLOGY IT CAN READ", font=F_TITLE, fill=ORANGE)
-    d.text((PAD, PAD + 34), "MaleCNS v1.0 Connectome (166k neurons) navigating reference citations", font=F_TINY, fill=GREY)
+    d.text((PAD, PAD + 34), "MaleCNS v1.0 connectome (166k neurons) foraging research literature", font=F_TINY, fill=GREY)
 
-    n_doors = len(doors)
-    if n_doors > 0:
-        room_w = room_x2 - room_x1
-        door_w = min(180, (room_w - 40) // n_doors - 14)
-        total_doors_w = n_doors * door_w + (n_doors - 1) * 14
-        start_dx = room_x1 + (room_w - total_doors_w) // 2
+    # Single Paper Card Container
+    card_bg = RED_BG if is_paywalled else CARD_BG
+    card_outline = RED if is_paywalled else (GREEN if paper.get("passable") else CARD_BORDER)
+    d.rectangle([cx1, cy1, cx2, cy2], fill=card_bg, outline=card_outline, width=3)
 
-        for i, door in enumerate(doors):
-            dx = start_dx + i * (door_w + 14)
-            dy = room_y1 + 75
-            dh = 95
-            is_open = door.get("passable", False)
-            bg_col = DOOR_OPEN_BG if is_open else DOOR_WALL_BG
-            b_col = GREEN if is_open else RED
+    # Card Top Header Bar: Status & Counter
+    header_h = 56
+    bar_fill = (45, 15, 18) if is_paywalled else ((20, 50, 30) if paper.get("passable") else (30, 32, 40))
+    d.rectangle([cx1, cy1, cx2, cy1 + header_h], fill=bar_fill, outline=card_outline, width=1)
 
-            d.rectangle([dx, dy, dx + door_w, dy + dh], fill=bg_col, outline=b_col, width=2)
-            status_txt = (door.get("oa_status") or "CLOSED").upper()
-            badge = f"CORRIDOR [{status_txt}]" if is_open else f"PAYWALL [{status_txt}]"
-            d.rectangle([dx, dy, dx + door_w, dy + 22], fill=(15, 15, 18))
-            d.text((dx + 6, dy + 5), badge, font=F_TINY, fill=b_col)
+    status_tag = (paper.get("oa_status") or ("CLOSED" if is_paywalled else "OPEN")).upper()
+    if is_paywalled:
+        badge_txt = f"PAYWALL  [{status_tag}] — ACCESS DENIED ($39.95)"
+        badge_col = RED
+    else:
+        badge_txt = f"CORRIDOR  [{status_tag}] — FULL TEXT ACCESSIBLE"
+        badge_col = GREEN
 
-            raw_title = door.get("title") or "Unknown Work"
-            year_str = f" ({door.get('year')})" if door.get("year") else ""
-            d_title = textwrap.shorten(f"{raw_title}{year_str}", width=22, placeholder="..")
-            d.text((dx + 8, dy + 30), d_title, font=F_SMALL, fill=WHITE)
+    d.text((cx1 + 18, cy1 + 16), badge_txt, font=F_MID, fill=badge_col)
+    progress_txt = f"Encounter {encounter_num} of {total_encounters}"
+    d.text((cx2 - d.textlength(progress_txt, font=F_SMALL) - 18, cy1 + 18), progress_txt, font=F_SMALL, fill=GREY)
 
-            sub = "OPEN ACCESS" if is_open else "$39.95 LOCKED"
-            d.text((dx + 8, dy + dh - 20), sub, font=F_TINY, fill=b_col)
-            d.text((dx + door_w - 22, dy + 5), f"#{i}", font=F_TINY, fill=GREY)
+    # Paper Title (Large, Clean Wrap)
+    raw_title = paper.get("title") or "Unknown Research Manuscript"
+    lines = textwrap.wrap(raw_title, width=42)
+    ty = cy1 + 80
+    for line in lines[:3]:
+        d.text((cx1 + 24, ty), line, font=F_BIG, fill=WHITE)
+        ty += 48
 
+    # Journal & Publication Year
+    j_name = paper.get("journal") or "Academic Journal"
+    yr = paper.get("year") or ""
+    j_str = f"Published in {j_name} ({yr})"
+    d.text((cx1 + 24, ty + 12), j_str, font=F_MID, fill=ORANGE)
+
+    # Metadata Divider
+    d.line([cx1 + 24, ty + 50, cx2 - 24, ty + 50], fill=(60, 65, 78), width=1)
+
+    # Simulated Abstract / Content Lines
+    meta_y = ty + 68
+    cites = paper.get("cited_by_count", 0)
+    d.text((cx1 + 24, meta_y), f"Citation Impact: {cites:,} cited references in OpenAlex corpus", font=F_BODY, fill=LIGHT_GREY)
+
+    # Large Access Stamp Box at bottom of card
+    stamp_y1 = cy2 - 110
+    stamp_y2 = cy2 - 24
+    if is_paywalled:
+        d.rectangle([cx1 + 24, stamp_y1, cx2 - 24, stamp_y2], fill=(60, 18, 20), outline=RED, width=2)
+        d.text((cx1 + 44, stamp_y1 + 16), "WALL: Paper locked behind toll barrier.", font=F_MID, fill=RED)
+        d.text((cx1 + 44, stamp_y1 + 44), "Fly connectome halted — cannot read references beyond paywall.", font=F_SMALL, fill=LIGHT_GREY)
+    else:
+        d.rectangle([cx1 + 24, stamp_y1, cx2 - 24, stamp_y2], fill=(18, 48, 26), outline=GREEN, width=2)
+        d.text((cx1 + 44, stamp_y1 + 16), "CORRIDOR: Paper read successfully.", font=F_MID, fill=GREEN)
+        d.text((cx1 + 44, stamp_y1 + 44), "Fly crawls through citations and proceeds into referenced literature.", font=F_SMALL, fill=LIGHT_GREY)
+
+    # Animated Fly Sprite crawling on the paper
     fx, fy, angle, wings_up, is_bumping = fly_state
-    draw_fly_sprite(d, fx + sx, fy + sy, angle, wings_up, s=6, alert=is_bumping)
+    draw_fly(d, fx + sx, fy + sy, angle, wings_up, s=7, alert=is_bumping)
 
-    if is_bumping:
-        d.rectangle([room_x1 + 30, room_y2 - 50, room_x2 - 30, room_y2 - 14], fill=(70, 20, 20), outline=RED, width=2)
-        d.text((room_x1 + 45, room_y2 - 40), "BLOCKED BY PAYWALL! Fly bounces and recalculates trajectory...", font=F_BODY, fill=RED)
-
-    # Right Panel: Neuron Readout with clear "Channel X"
+    # Right Panel: Live Motor Channel Spikes & Scoreboard
     x0 = LEFT_W + PAD
-    d.line([LEFT_W, 0, LEFT_W, H], fill=BORDER_COL, width=2)
+    d.line([LEFT_W, 0, LEFT_W, H], fill=CARD_BORDER, width=2)
 
     d.text((x0, PAD + 10), "NEURON READOUT", font=F_MID, fill=ORANGE)
     d.text((x0, PAD + 32), "Descending motor channel firing", font=F_TINY, fill=GREY)
@@ -190,25 +200,26 @@ def render_room_frame(curr_paper, doors, fly_state, step_data, papers_read, payw
     bar_y = PAD + 60
     for i in range(8):
         val = next((c.get("readout_spikes", 0) for c in cands if c.get("channel") == i), 0.0)
-        w_bar = int((val / top) * (W - x0 - PAD - 95))
+        w_bar = int((val / top) * (W - x0 - PAD - 100))
         d.text((x0, bar_y), f"Channel {i}", font=F_TINY, fill=GREY)
-        d.rectangle([x0 + 68, bar_y, x0 + 68 + max(w_bar, 2), bar_y + 13],
-                    fill=ORANGE if val == top and val > 0 else (75, 75, 85))
+        d.rectangle([x0 + 72, bar_y, x0 + 72 + max(w_bar, 2), bar_y + 13],
+                    fill=ORANGE if val == top and val > 0 else (75, 78, 88))
         bar_y += 22
 
-    # Scoreboard
+    # Arcade Scoreboard
     y2 = bar_y + 30
     box_w = W - x0 - PAD
-    d.rectangle([x0, y2, x0 + box_w, y2 + 160], fill=(18, 20, 25), outline=BORDER_COL, width=2)
-    d.text((x0 + 14, y2 + 14), "PAPERS READ", font=F_SMALL, fill=GREY)
-    d.text((x0 + 14, y2 + 32), f"{papers_read:03d}", font=F_BIG, fill=GREEN)
+    d.rectangle([x0, y2, x0 + box_w, y2 + 160], fill=(18, 20, 25), outline=CARD_BORDER, width=2)
+    d.text((x0 + 16, y2 + 14), "PAPERS READ", font=F_SMALL, fill=GREY)
+    d.text((x0 + 16, y2 + 32), f"{papers_read:03d}", font=F_BIG, fill=GREEN)
 
-    d.text((x0 + 14, y2 + 86), "PAYWALLS HIT", font=F_SMALL, fill=GREY)
-    d.text((x0 + 14, y2 + 104), f"{paywalls_hit:03d}", font=F_BIG, fill=RED)
+    d.text((x0 + 16, y2 + 86), "PAYWALLS HIT", font=F_SMALL, fill=GREY)
+    d.text((x0 + 16, y2 + 104), f"{paywalls_hit:03d}", font=F_BIG, fill=RED)
 
     if step_data:
         d.text((x0, y2 + 180), f"Step spikes: {step_data.get('total_spikes', 0):,}", font=F_BODY, fill=WHITE)
 
+    # Footer
     d.text((x0, H - PAD - 42), "CRIMCONSORTIUM", font=F_MID, fill=ORANGE)
     d.text((x0, H - PAD - 18), "fruitfly.crimconsortium.com", font=F_TINY, fill=GREY)
 
@@ -249,132 +260,98 @@ def main() -> None:
         ("IT CAN READ", F_BIG, ORANGE),
     ], sub="MaleCNS v1.0 Connectome (CC-BY) x OpenAlex (CC0). Open access = corridor, paywalls = walls.")
 
-    valid_steps = [s for s in trace["steps"] if s.get("to") or s.get("bumps")]
+    # Flatten the run into an ordered list of ONE-PAPER-AT-A-TIME events:
+    # Each event is either encountering a Paywalled paper (bump) or Reading an Open paper (to).
+    events = []
+    # Seed paper is event #1
+    events.append({
+        "paper": seed,
+        "is_paywalled": not seed.get("passable", True),
+        "step_data": trace["steps"][0] if trace["steps"] else None
+    })
 
-    # Sample sequential steps across the run
-    if len(valid_steps) > 10:
-        indices = np.linspace(0, len(valid_steps) - 1, 10, dtype=int)
-        selected_steps = [valid_steps[i] for i in indices]
+    for s in trace["steps"]:
+        # Add paywall bumps encountered at this step
+        for b_id in s.get("bumps", []):
+            if b_id in nodes_map:
+                events.append({
+                    "paper": nodes_map[b_id],
+                    "is_paywalled": True,
+                    "step_data": s
+                })
+        # Add the open paper transitioned to
+        t_id = s.get("to")
+        if t_id and t_id in nodes_map and nodes_map[t_id].get("passable"):
+            events.append({
+                "paper": nodes_map[t_id],
+                "is_paywalled": False,
+                "step_data": s
+            })
+
+    # Pick 10-14 distinct events across the run
+    if len(events) > 12:
+        indices = np.linspace(0, len(events) - 1, 12, dtype=int)
+        selected_events = [events[i] for i in indices]
     else:
-        selected_steps = valid_steps
+        selected_events = events
 
     frames = [np.asarray(title)] * (2 * FPS)
-    papers_read = 1
+    papers_read = 0
     paywalls_hit = 0
 
-    room_x1, room_y1 = PAD, PAD + 54
-    room_x2, room_y2 = LEFT_W - PAD, H - PAD - 20
-    room_center_x = (room_x1 + room_x2) // 2
-    room_bottom_y = room_y2 - 60
+    total_encounters = len(selected_events)
+    frames_per_event = int((args.seconds - 6.0) * FPS / max(total_encounters, 1))
+    frames_per_event = max(frames_per_event, 30)
 
-    curr_paper = seed
+    # Center area of the card for the fly
+    fly_cx = LEFT_W // 2
+    fly_cy = H // 2 + 30
 
-    frames_per_decision = int((args.seconds - 6.0) * FPS / max(len(selected_steps), 1))
-    frames_per_decision = max(frames_per_decision, 28)
+    for idx, ev in enumerate(selected_events, 1):
+        paper = ev["paper"]
+        is_paywalled = ev["is_paywalled"]
+        step_data = ev["step_data"]
 
-    for s in selected_steps:
-        target_id = s.get("to")
-        bump_ids = s.get("bumps", [])
+        if is_paywalled:
+            paywalls_hit += 1
+        else:
+            papers_read += 1
 
-        # Build distinct doorway candidates:
-        # Aggressively deduplicate by 3-word title stem and ignore generic titles like 'Reference'
-        seen_stems = set()
-        seen_ids = set()
-        doors = []
+        for f in range(frames_per_event):
+            t = f / max(frames_per_event - 1, 1)
+            wings_up = (f // 2) % 2 == 0
 
-        if target_id and target_id in nodes_map:
-            t_node = nodes_map[target_id]
-            t_title = t_node.get("title", "")
-            if t_title and t_title.lower() != "reference":
-                doors.append(t_node)
-                seen_ids.add(t_node["id"])
-                seen_stems.add(title_stem(t_title))
-
-        for bid in bump_ids:
-            if len(doors) >= 4:
-                break
-            if bid in nodes_map and bid not in seen_ids:
-                b_node = nodes_map[bid]
-                b_title = b_node.get("title", "")
-                b_stem = title_stem(b_title)
-                if b_title and b_title.lower() != "reference" and b_stem not in seen_stems:
-                    doors.append(b_node)
-                    seen_ids.add(bid)
-                    seen_stems.add(b_stem)
-
-        if not doors:
-            continue
-
-        n_doors = len(doors)
-        room_w = room_x2 - room_x1
-        door_w = min(180, (room_w - 40) // n_doors - 14)
-        total_doors_w = n_doors * door_w + (n_doors - 1) * 14
-        start_dx = room_x1 + (room_w - total_doors_w) // 2
-
-        # 1. Bump animation phase (if paywall encountered)
-        if bump_ids:
-            paywalls_hit += len(bump_ids)
-            wall_door_idx = 0
-            for di, d_node in enumerate(doors):
-                if not d_node.get("passable"):
-                    wall_door_idx = di
-                    break
-
-            bump_target_x = start_dx + wall_door_idx * (door_w + 14) + door_w // 2
-            bump_target_y = room_y1 + 130
-            bump_frames = min(18, frames_per_decision // 2)
-
-            for bf in range(bump_frames):
-                t = bf / max(bump_frames - 1, 1)
-                if t < 0.6:
-                    fx = room_center_x + (bump_target_x - room_center_x) * (t / 0.6)
-                    fy = room_bottom_y + (bump_target_y - room_bottom_y) * (t / 0.6)
-                    ang = -20
+            if is_paywalled:
+                # Paywall Encounter: Fly crawls up, hits barrier, recoils with screen shake
+                if t < 0.4:
+                    fx = fly_cx
+                    fy = (fly_cy + 60) - (t / 0.4) * 60
+                    ang = 0
                     is_bump = False
                     shake = (0, 0)
                 else:
-                    fx = bump_target_x + np.sin(bf * 2.0) * 8
-                    fy = bump_target_y + 18 + (t - 0.6) * 40
-                    ang = 160
+                    # Screen shake and recoil
+                    fx = fly_cx + np.sin(f * 2.5) * 6
+                    fy = fly_cy + (t - 0.4) * 40
+                    ang = 180
                     is_bump = True
-                    shake = (int(np.sin(bf * 3) * 5), int(np.cos(bf * 3) * 5))
+                    shake = (int(np.sin(f * 3) * 6), int(np.cos(f * 3) * 6))
+            else:
+                # Open Access: Fly calmly crawls across the page
+                fx = (fly_cx - 80) + t * 160
+                fy = fly_cy + np.sin(t * np.pi * 3) * 15
+                ang = 90 + int(np.cos(t * np.pi * 3) * 20)
+                is_bump = False
+                shake = (0, 0)
 
-                wings = (bf // 2) % 2 == 0
-                f_img = render_room_frame(curr_paper, doors, (fx, fy, ang, wings, is_bump),
-                                          s, papers_read, paywalls_hit, shake)
-                frames.append(np.asarray(f_img))
+            f_img = render_single_paper_frame(
+                paper, is_paywalled, idx, total_encounters,
+                (fx, fy, ang, wings_up, is_bump),
+                step_data, papers_read, paywalls_hit, shake
+            )
+            frames.append(np.asarray(f_img))
 
-        # 2. Chosen Corridor Pass-through Phase
-        if target_id and target_id in nodes_map:
-            target_node = nodes_map[target_id]
-            is_passable = target_node.get("passable", False)
-            chosen_door_idx = 0
-            for di, d_node in enumerate(doors):
-                if d_node.get("id") == target_id:
-                    chosen_door_idx = di
-                    break
-
-            target_door_x = start_dx + chosen_door_idx * (door_w + 14) + door_w // 2
-            target_door_y = room_y1 + 80
-            walk_frames = max(frames_per_decision - (len(bump_ids) * 12), 16)
-
-            for wf in range(walk_frames):
-                t = wf / max(walk_frames - 1, 1)
-                fx = room_center_x + (target_door_x - room_center_x) * t
-                fy = (room_bottom_y - 20) + (target_door_y - (room_bottom_y - 20)) * t
-                ang = 0 if (target_door_x - room_center_x) == 0 else (
-                    np.degrees(np.arctan2(target_door_y - room_bottom_y, target_door_x - room_center_x)) + 90
-                )
-                wings = (wf // 2) % 2 == 0
-                f_img = render_room_frame(curr_paper, doors, (fx, fy, ang, wings, False),
-                                          s, papers_read, paywalls_hit, (0, 0))
-                frames.append(np.asarray(f_img))
-
-            if is_passable:
-                papers_read += 1
-                curr_paper = target_node
-
-    # End summary card
+    # End Summary Card
     r = trace["result"]
     sel = summary_line(calib)
     end = title_card([
