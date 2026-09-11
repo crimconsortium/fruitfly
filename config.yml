@@ -1,0 +1,17 @@
+# Project configuration. The OA policy here is the single definition used everywhere.
+
+corpus:
+  primary: corpus/wos_criminology_penology.txt
+  provenance: corpus/PROVENANCE.md
+
+policy:
+  # Open access, for this project's purposes.
+  open_statuses: [diamond, gold, green, hybrid]
+  closed_statuses: [bronze, closed]
+  # Reported alongside the headline number as a sensitivity check.
+  sensitivity_open_statuses: [diamond, gold, green, hybrid, bronze]
+  years: [2015, 2026]
+
+resolver:
+  # Below this fuzzy-match score, a row is flagged CHECK for human review.
+  min_match_score: 0.92
