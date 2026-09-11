@@ -4,13 +4,20 @@
 # closure, build and calibrate the connectome, run the fly on every seed, pick a
 # representative trace, render the video, and write RESULTS.md.
 #
-# On success: site/fly.mp4, site/fly.gif, and RESULTS.md are committed.
-# On failure: a GitHub issue is opened with a link to the log.
+# The crawl checkpoints after every seed. If the run dies mid-crawl, just run it again:
+# it resumes from data/citations/seeds.partial.json instead of starting over.
+#
+# On failure: a GitHub issue is opened, and the stale RESULTS.md is NOT republished.
 
 name: go
 
 on:
   workflow_dispatch:
+    inputs:
+      fresh:
+        description: "Ignore the crawl checkpoint and start the crawl over"
+        required: false
+        default: "false"
 
 permissions:
   contents: write
@@ -19,7 +26,7 @@ permissions:
 jobs:
   everything:
     runs-on: ubuntu-latest
-    timeout-minutes: 240
+    timeout-minutes: 300
     steps:
       - uses: actions/checkout@v4
 
@@ -46,7 +53,23 @@ jobs:
       - name: 2/6 Crawl the OA-gated citation closure
         env:
           OPENALEX_MAILTO: ${{ vars.OPENALEX_MAILTO }}
-        run: python src/fetch_citations.py
+          PYTHONPATH: src
+        run: |
+          if [ "${{ inputs.fresh }}" = "true" ]; then
+            python src/fetch_citations.py --fresh
+          else
+            python src/fetch_citations.py
+          fi
+
+      - name: Save the crawl checkpoint even if a later step fails
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/citations/ || true
+          git diff --staged --quiet || git commit -m "data: crawl progress"
+          git pull --rebase --autostash || true
+          git push || true
 
       - name: 3/6 Build the pruned MaleCNS connectome
         run: python src/build_connectome.py
@@ -72,10 +95,11 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add data/ site/ RESULTS.md
           git diff --staged --quiet || git commit -m "run: full pipeline"
+          git pull --rebase --autostash || true
           git push
 
       - name: Put the results in the run summary
-        if: always()
+        if: success()
         run: cat RESULTS.md >> "$GITHUB_STEP_SUMMARY" || true
 
       - name: Open an issue if this failed
@@ -86,4 +110,4 @@ jobs:
         run: |
           gh issue create \
             --title "fruitfly pipeline failed (run #${{ github.run_number }})" \
-            --body "The \`go\` workflow failed. The step name says which stage.$(printf '\n\n')Log: $RUN_URL$(printf '\n\n')Paste the last ~20 lines of the log to get this fixed."
+            --body "The \`go\` workflow failed at the step named in the log. Any RESULTS.md in the repo is from an EARLIER run and was not republished.$(printf '\n\n')The crawl checkpoints after every seed, so re-running resumes rather than restarting.$(printf '\n\n')Log: $RUN_URL"

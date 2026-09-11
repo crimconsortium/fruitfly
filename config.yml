@@ -12,26 +12,28 @@ policy:
   sensitivity_open_statuses: [diamond, gold, green, hybrid, bronze]
   years: [2015, 2026]
   # Count a repository copy as reachable even when oa_status says otherwise.
-  # oa_status only reports 'green' when the BEST oa location is a repository,
-  # so trusting it alone understates repository availability.
   credit_repository_locations: true
 
 resolver:
-  # Below this fuzzy-match score, a row is flagged CHECK for human review.
   min_match_score: 0.92
+
+api:
+  max_attempts: 8
+  max_backoff_seconds: 120
+  # A single failed batch degrades to 'unresolved' and the crawl continues.
+  # The run aborts only if this share of batches fails permanently.
+  max_failed_batch_share: 0.1
 
 citations:
   n_seeds: 100
   rng_seed: 20260911
   # Stopping rule: run until stuck. The cap below is a compute guard, NOT the rule.
   #
-  # It was 300, and 24 of the 25 open seeds hit it. Crawls that hit the cap are
-  # CENSORED observations: their reachable totals are lower bounds. They are never
-  # dropped from seed-level statistics, because hitting a compute guard says nothing
-  # about whether the seed paper was readable.
-  max_nodes_per_seed: 1500
+  # It was 300, and 24 of the 25 open seeds hit it, which is why they were censored.
+  # 1500 made run #2 too request-heavy to finish; 800 with a shared work cache is the
+  # compromise. Crawls that hit the cap are CENSORED, never dropped from seed stats.
+  max_nodes_per_seed: 800
   max_depth: 4
-  # references = follow reference lists backward, the way a literature review works.
   follow: references
   batch_size: 50
 
