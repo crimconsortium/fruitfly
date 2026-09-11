@@ -3,12 +3,83 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>fruitfly &mdash; CrimConsortium</title>
-<meta name="description" content="A simulated fruit fly brain forages the criminology citation graph. Papers you can read are corridors. Papers you cannot read are walls.">
-<meta property="og:title" content="A fruit fly looks for criminology it can read">
-<meta property="og:description" content="Real connectome. Real citation graph. Real paywalls.">
+<title>Fruit fly explores open criminology | CrimConsortium</title>
+<meta name="description" content="Watch a simulated fruit fly explore the criminology citation graph. Open-access papers are corridors, paywalls are walls. Code, data and controls are open.">
+<meta name="author" content="CrimConsortium">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<meta name="theme-color" content="#000000">
+<link rel="canonical" href="https://fruitfly.crimconsortium.com/">
+<link rel="alternate" hreflang="en" href="https://fruitfly.crimconsortium.com/">
+<link rel="alternate" hreflang="x-default" href="https://fruitfly.crimconsortium.com/">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="dns-prefetch" href="https://github.com">
+<link rel="dns-prefetch" href="https://www.crimrxiv.com">
+<link rel="dns-prefetch" href="https://crimconsortium.com">
+<meta property="og:title" content="Fruit fly explores open criminology | CrimConsortium">
+<meta property="og:description" content="Watch a simulated fruit fly explore the criminology citation graph. Open-access papers are corridors, paywalls are walls. Code, data and controls are open.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://fruitfly.crimconsortium.com/">
+<meta property="og:site_name" content="fruitfly — CrimConsortium">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://fruitfly.crimconsortium.com/fly.gif">
+<meta property="og:image:secure_url" content="https://fruitfly.crimconsortium.com/fly.gif">
+<meta property="og:image:type" content="image/gif">
+<meta property="og:image:width" content="640">
+<meta property="og:image:height" content="360">
+<meta property="og:image:alt" content="A simulated fruit fly explores criminology papers, moving through open access and stopping at paywalls.">
 <meta property="og:video" content="https://fruitfly.crimconsortium.com/fly.mp4">
+<meta property="og:video:secure_url" content="https://fruitfly.crimconsortium.com/fly.mp4">
+<meta property="og:video:type" content="video/mp4">
+<meta property="og:video:width" content="1280">
+<meta property="og:video:height" content="720">
+<meta property="og:updated_time" content="2026-09-11T16:27:00-04:00">
+<meta property="og:see_also" content="https://github.com/crimconsortium/fruitfly">
+<meta property="og:see_also" content="https://www.crimrxiv.com">
+<meta property="og:see_also" content="https://crimconsortium.com">
 <meta name="twitter:card" content="player">
+<meta name="twitter:title" content="Fruit fly explores open criminology | CrimConsortium">
+<meta name="twitter:description" content="Watch a simulated fruit fly explore the criminology citation graph. Open-access papers are corridors, paywalls are walls. Code, data and controls are open.">
+<meta name="twitter:image" content="https://fruitfly.crimconsortium.com/fly.gif">
+<meta name="twitter:image:alt" content="A simulated fruit fly explores criminology papers, moving through open access and stopping at paywalls.">
+<meta name="twitter:player" content="https://fruitfly.crimconsortium.com/player.html">
+<meta name="twitter:player:width" content="1280">
+<meta name="twitter:player:height" content="720">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://crimconsortium.com/#organization",
+      "name": "CrimConsortium",
+      "url": "https://crimconsortium.com"
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://fruitfly.crimconsortium.com/#website",
+      "url": "https://fruitfly.crimconsortium.com/",
+      "name": "fruitfly — CrimConsortium",
+      "description": "Watch a simulated fruit fly explore the criminology citation graph. Open-access papers are corridors, paywalls are walls. Code, data and controls are open.",
+      "inLanguage": "en",
+      "publisher": {"@id": "https://crimconsortium.com/#organization"}
+    },
+    {
+      "@type": "WebPage",
+      "@id": "https://fruitfly.crimconsortium.com/#webpage",
+      "url": "https://fruitfly.crimconsortium.com/",
+      "name": "Fruit fly explores open criminology | CrimConsortium",
+      "description": "Watch a simulated fruit fly explore the criminology citation graph. Open-access papers are corridors, paywalls are walls. Code, data and controls are open.",
+      "inLanguage": "en",
+      "isPartOf": {"@id": "https://fruitfly.crimconsortium.com/#website"},
+      "relatedLink": [
+        "https://github.com/crimconsortium/fruitfly",
+        "https://www.crimrxiv.com",
+        "https://crimconsortium.com"
+      ]
+    }
+  ]
+}
+</script>
 <style>
   :root { --orange:#f68212; --bg:#000; --fg:#f0f0f0; --dim:#9a9a9a; }
   * { box-sizing:border-box; }
@@ -44,7 +115,7 @@
 
   <video src="fly.mp4" autoplay muted loop playsinline controls></video>
 
-  <div class="stats" id="stats"></div>
+  <div class="stats" id="stats" role="status" aria-live="polite"></div>
 
   <h2>What is real here</h2>
   <p>The wiring is the real thing: <strong>MaleCNS v1.0</strong>, the complete connectome of an
@@ -104,21 +175,30 @@
   </footer>
 </div>
 <script>
-fetch('stats.json').then(r => r.json()).then(s => {
+fetch('stats.json', { cache: 'no-store' }).then(r => {
+  if (!r.ok) throw new Error(`Statistics request failed (${r.status})`);
+  return r.json();
+}).then(s => {
+  if (!s || typeof s !== 'object' || Array.isArray(s)) {
+    throw new Error('Invalid statistics payload');
+  }
   const r = s.result || {}, c = s.calibration || {};
-  const pct = x => (x === null || x === undefined) ? 'n/a' : (x * 100).toFixed(0) + '%';
+  const count = (x, localized = false) => Number.isInteger(x) && x >= 0
+    ? (localized ? x.toLocaleString() : x) : 'n/a';
+  const pct = x => Number.isFinite(x) ? (x * 100).toFixed(0) + '%' : 'n/a';
   document.getElementById('stats').innerHTML = [
-    ['papers read', r.reachable],
-    ['paywalls hit', r.walls_hit],
-    ['moves', r.n_steps],
-    ['neurons simulated', ((s.engine || {}).neurons || 0).toLocaleString()]
+    ['papers read', count(r.reachable)],
+    ['paywalls hit', count(r.walls_hit)],
+    ['moves', count(r.n_steps)],
+    ['neurons simulated', count((s.engine || {}).neurons, true)]
   ].map(([k, v]) => `<div class="stat"><b>${v}</b><span>${k}</span></div>`).join('');
 
   // Tolerate both calibration formats: selectivity_shuffled_mean (with replicates)
   // and the older single selectivity_shuffled.
   const shuffled = (c.selectivity_shuffled_mean !== undefined && c.selectivity_shuffled_mean !== null)
     ? c.selectivity_shuffled_mean : c.selectivity_shuffled;
-  const reps = c.selectivity_shuffled_replicates || [];
+  const reps = Array.isArray(c.selectivity_shuffled_replicates)
+    ? c.selectivity_shuffled_replicates : [];
   const nReps = c.n_shuffle_replicates || reps.length || 0;
   const el = document.getElementById('control-numbers');
   if (c.selectivity_real === undefined || c.selectivity_real === null) {
@@ -132,9 +212,15 @@ fetch('stats.json').then(r => r.json()).then(s => {
     }
     html += `Chance: ${pct(c.chance_level)}.`;
     if (reps.length) html += `<br>Replicates: ${reps.map(pct).join(', ')}.`;
-    if (c.verdict) html += `<br>${c.verdict}`;
     el.innerHTML = html;
+    if (c.verdict) el.append(document.createElement('br'), document.createTextNode(c.verdict));
   }
+}).catch(error => {
+  console.error('Unable to load run statistics:', error);
+  document.getElementById('stats').textContent =
+    'Run statistics are unavailable. Please reload to try again.';
+  document.getElementById('control-numbers').textContent =
+    'Calibration statistics are unavailable for this request.';
 });
 </script>
 </body>

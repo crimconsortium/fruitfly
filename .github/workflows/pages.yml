@@ -1,0 +1,65 @@
+name: Deploy Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'site/**'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch:
+  # go pushes its finished site with GITHUB_TOKEN, which does not trigger push workflows.
+  workflow_run:
+    workflows: [go]
+    types: [completed]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: >-
+      (github.event_name != 'workflow_run' && github.ref == 'refs/heads/main') ||
+      (github.event_name == 'workflow_run' &&
+       github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.head_branch == 'main' &&
+       github.event.workflow_run.head_repository.full_name == github.repository)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Check out the latest published files on main
+        uses: actions/checkout@v4
+        with:
+          # workflow_run.head_sha predates go's final artifact commit. Never use it here.
+          # Intermediate go checkpoints contain data/ only; site/ is committed after render.
+          # Package this committed snapshot, never files from an in-progress runner.
+          ref: main
+          persist-credentials: false
+
+      - name: Require the complete static site
+        run: |
+          for file in index.html player.html stats.json fly.mp4 fly.gif CNAME robots.txt sitemap.xml favicon.svg; do
+            test -s "site/$file" || { echo "Missing site/$file"; exit 1; }
+          done
+          python -m json.tool site/stats.json > /dev/null
+          test "$(cat site/CNAME)" = "fruitfly.crimconsortium.com"
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload site only
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site/
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

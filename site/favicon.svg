@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" shape-rendering="crispEdges">
+  <title>fruitfly</title>
+  <path fill="#000" d="M0 0h32v32H0z"/>
+  <path fill="#b4b4be" d="M5 8h6v4H5zm16 0h6v4h-6z"/>
+  <path fill="#646464" d="M9 12h2v2H9zm-2 4h2v2H7zm2 6h2v2H9zm12-10h2v2h-2zm2 4h2v2h-2zm-2 6h2v2h-2z"/>
+  <path fill="#f0f0f0" d="M15 10h2v2h2v4h2v4h-2v2h-2v2h-2v-2h-2v-2h-2v-4h2v-4h2z"/>
+  <path fill="#f68212" d="M11 8h2v4h-2zm8 0h2v4h-2z"/>
+</svg>
