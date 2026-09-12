@@ -14,7 +14,7 @@ import yaml
 ROOT = Path(__file__).resolve().parent.parent
 SITE = ROOT / "site"
 ORIGIN = "https://fruitfly.crimconsortium.com"
-UPDATED = "2026-09-12T12:20:00-04:00"
+UPDATED = "2026-09-12T12:25:00-04:00"
 
 
 class Page(HTMLParser):
@@ -397,8 +397,14 @@ def test_background_credits_the_connectome_and_the_access_evidence():
 
 
 def test_page_claims_no_crimrxiv_affiliation():
+    """No CrimRxiv branding or links; the feedback mailbox is the one allowed mention."""
     body = (SITE / "index.html").read_text()
-    assert "rimrxiv" not in body.lower()
+    allowed = 'Feedback, comments, reviews or anything else are welcome at'
+    assert allowed in body
+    assert '<a href="mailto:consortium@crimrxiv.com">consortium@crimrxiv.com</a>' in body
+    stripped = body.replace("mailto:consortium@crimrxiv.com", "").replace(
+        "consortium@crimrxiv.com", "")
+    assert "rimrxiv" not in stripped.lower()
 
 
 def test_the_page_carries_the_family_theme_toggle():
