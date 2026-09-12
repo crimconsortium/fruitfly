@@ -31,7 +31,7 @@
 <meta property="og:video:type" content="video/mp4">
 <meta property="og:video:width" content="1280">
 <meta property="og:video:height" content="720">
-<meta property="og:updated_time" content="2026-09-12T11:30:00-04:00">
+<meta property="og:updated_time" content="2026-09-12T12:05:00-04:00">
 <meta property="og:see_also" content="https://github.com/crimconsortium/fruitfly">
 <meta property="og:see_also" content="https://crimconsortium.com">
 <meta name="twitter:card" content="player">
@@ -127,6 +127,9 @@
   th { color:var(--dim); font-weight:600; }
   code { background:var(--panel); padding:1px 5px; color:var(--orange); }
   a { color:var(--orange); }
+  sup a { text-decoration:none; padding:0 1px; }
+  ol.notes { color:var(--dim); font-size:14px; padding-left:20px; }
+  ol.notes li { margin:.5em 0; }
   footer { margin-top:64px; color:var(--dim); font-size:13px; }
 </style>
 <script id="theme">
@@ -163,7 +166,7 @@
 <body>
 <div class="wrap">
   <div class="topbar">
-    <div class="brand">CRIMCONSORTIUM</div>
+    <a class="brand" href="https://crimconsortium.com">CRIMCONSORTIUM</a>
     <button class="icon-btn" type="button" data-theme-toggle aria-label="Toggle color scheme">
       <!-- icon injected by the theme script -->
     </button>
@@ -186,62 +189,82 @@
   <h2>Where this came from</h2>
   <p>On 3 September 2026, about a hundred scientists at HHMI Janelia, the University of Cambridge,
   the MRC Laboratory of Molecular Biology and Google Research published the first complete
-  connectome of an adult male <em>Drosophila</em> central nervous system in <em>Cell</em>:
-  <a href="https://pubmed.ncbi.nlm.nih.gov/42691995/">166,700 neurons and 11,710 neuron
-  types</a>, every one of them traced. <a href="https://research.google/blog/a-connectomics-milestone-mapping-the-complete-male-fruit-fly-brain/">Google
+  connectome &mdash; a full wiring diagram of a brain, every cell and every connection between
+  them &mdash; of an adult male <em>Drosophila</em> central nervous system in
+  <em><a href="https://www.cell.com/cell/fulltext/S0092-8674(26)00942-6?_returnURL=https%3A%2F%2Flinkinghub.elsevier.com%2Fretrieve%2Fpii%2FS0092867426009426%3Fshowall%3Dtrue">Cell</a></em>:
+  166,700 neurons and 11,710 neuron types, every one of them traced.
+  <a href="https://research.google/blog/a-connectomics-milestone-mapping-the-complete-male-fruit-fly-brain/">Google
   posted about it</a> and it went round the internet. The data itself, MaleCNS v1.0, had been
-  <a href="https://male-cns.janelia.org/">out since June</a> under
-  <a href="https://www.janelia.org/project-team/flyem/male-cns-connectome">CC-BY</a>, so anyone
-  could download a whole fly brain.</p>
+  <a href="https://male-cns.janelia.org/">out since June</a> under an open licence, so anyone could
+  <a href="https://www.janelia.org/project-team/flyem/male-cns-connectome">download a whole fly
+  brain</a> and run it.</p>
   <p>People did, immediately. Within a week the fly was
   <a href="https://gizmodo.com/google-mapped-a-fruit-flys-brain-now-its-playing-doom-and-super-mario-64-2000808616">playing
   Doom and Super Mario 64</a>, walking around
   <a href="https://github.com/evnsnclr/neurocraft-fly-public">Minecraft</a>, and
-  <a href="https://github.com/MarkUnthank/flyhard">driving a car in a simulator</a>. We pointed the
-  same trick at something we care about.</p>
+  <a href="https://github.com/MarkUnthank/flyhard">driving a car in a simulator</a>. Each of those
+  works the same way: give the fly's neurons something to sense, let them spike, and let their
+  output pick the next move. We pointed the same trick at something we care about.</p>
 
   <h2>Criminology is largely paywalled</h2>
-  <p>This is measured, not assumed. Matthew Ashby checked 12,541 articles across 97 criminology
-  journals published 2017&ndash;2019 and found that
+  <p>Matthew Ashby checked 12,541 articles across 97 criminology journals published
+  2017&ndash;2019 and found that
   <a href="https://lesscrime.info/files/open_access_to_criminology_postprint.pdf">22% were
-  available to non-subscribers</a> &mdash; in his words, &ldquo;about half that found in other
-  disciplines, even though authors had the right to make articles open without payment in at least
-  95% of cases.&rdquo; More than three quarters of the field was hidden. He also found that Taylor
-  &amp; Francis, the largest publisher in criminology, had the lowest open share of any publisher
-  &mdash; and his study appeared in a Taylor &amp; Francis journal, where
+  available to non-subscribers</a> &mdash; that is, readable by someone without a paid journal
+  subscription or a university library that has one. In his words, that is &ldquo;about half that
+  found in other disciplines, even though authors had the right to make articles open without
+  payment in at least 95% of cases.&rdquo; More than three quarters of the field was hidden. He
+  also found that Taylor &amp; Francis, the largest publisher in criminology, had the lowest open
+  share of any publisher &mdash; and his study appeared in a Taylor &amp; Francis journal, where
   <a href="https://www.tandfonline.com/doi/abs/10.1080/10511253.2020.1838588">the version of
   record is behind the paywall</a> and the readable copy is the manuscript he archived himself.</p>
-  <p>Our own index of the field agrees: of 30,654 articles in 51 journals, <strong>31% are open
-  under the rule below</strong>, 35% if you count bronze. So roughly two papers in three are a
-  wall. The fly is just a way to walk through that.</p>
+  <p>A percentage like that counts what is open. It does not tell you what happens to a person
+  doing research, because nobody reads a percentage: you start at one paper, look at what it cites,
+  read what you can get, and follow that outward. Whether the field is usable depends on how far
+  that chain gets before it dead-ends. We wanted to watch that happen instead of assuming it, so we
+  built a reader we could actually run and count: the fly brain, dropped on a real criminology
+  paper, choosing its next paper from the references in front of it, stopped every time the paper
+  it wants is behind a paywall.</p>
 
   <h2>How we did it</h2>
-  <p>The corpus is the Web of Science research area <strong>Criminology &amp; Penology</strong>,
-  adopted as-is: 51 journals, 30,654 articles. <em>European Journal of Criminology</em> and
-  <em>Crime Science</em> are not in it. That is Clarivate's boundary, not ours &mdash; and the
-  authoritative version of that list is available only to Web of Science subscribers, so the
-  conventional definition of criminology is itself paywalled. Titles, reference lists and
-  access status come from <a href="https://openalex.org">OpenAlex</a>, CC0.</p>
-  <p><strong>Sampling.</strong> We drew <strong>100 seed papers at random</strong> from that
-  corpus &mdash; no curation, no hand-picking a paper with a good reference list. The fly is
-  dropped on the seed and walks outward through reference lists, one paper at a time, never
-  revisiting. A run ends when nothing readable is left next to it, or at a cap of 800 papers.</p>
-  <p><strong>The brain.</strong> From the MaleCNS v1.0 flat connectome we keep the 1,342 descending
-  neurons &mdash; the ones that carry commands out to the body &mdash; plus two hops of their
-  strongest upstream partners, capped at <strong>20,000 neurons and 1,016,133 signed
-  connections</strong> out of the 151.9 million in the source. Connections weaker than five
-  synapses are dropped, and each is made excitatory or inhibitory from its predicted
-  neurotransmitter; 22,764 with no usable prediction are dropped. It is a real subgraph of a real
-  fly, not the whole fly, and we say so.</p>
-  <p><strong>The decision.</strong> Leaky integrate-and-fire neurons, 1&nbsp;ms steps, 50&nbsp;ms
-  of spiking per decision, membrane time constant 20&nbsp;ms. Each unvisited neighbour drives one
-  of eight bands of input neurons at a rate set by its citation count; paywalled neighbours drive a
-  band too, so they disturb the dynamics without ever being selectable. The descending neurons form
-  eight readout groups and the candidate whose group fires most wins, ties broken by the random
-  number generator. Gain is calibrated to a mean rate of 9.93&nbsp;Hz. Nothing learns, nothing about
-  the fly changes between steps, and the seed is fixed, so any run reproduces exactly.</p>
+  <p>First we had to decide where the fly starts. If we picked the paper ourselves we would be
+  measuring our own taste in papers, so we drew 100 seed papers at random and used all 100. We drew
+  them from the Web of Science research area Criminology &amp; Penology, taken as it comes: 51
+  journals, 30,654 articles.<sup><a id="r1" href="#n1">1</a></sup> Under the rule in the table
+  below, 31% of those articles are open, or 35% if you count bronze. Everything the fly knows about
+  a paper &mdash; its title, the papers it cites, and whether it is free to read &mdash; comes from
+  <a href="https://openalex.org">OpenAlex</a>, a free public index of scholarly work released
+  CC0, so the map the fly walks on is a map anyone else can download and check.</p>
+  <p>Every run then goes the same way. The fly is dropped on its seed paper, and its next move is
+  chosen from the papers that paper cites. If it picks one it can read, that paper becomes where it
+  is standing and its references become the new options. It never goes back to a paper it has
+  already read. A run ends when nothing readable is left next to it, or at a cap of 800 papers,
+  which exists so one lucky run cannot walk all day.</p>
+  <p>Something has to make that choice, and that is the fly. Simulating all 166,700 neurons for
+  every step would be far too slow, so we kept the part of the brain that produces action: the
+  1,342 descending neurons, which are the cells that carry commands out of the brain to the body,
+  plus two hops of their strongest upstream partners. That comes to 20,000 neurons and 1,016,133
+  connections, chosen out of the 151.9 million in the published file. Connections carrying fewer
+  than five synapses are dropped, because those are the least reliable ones in the data, and each
+  connection that stays is set to excite or to inhibit according to the neurotransmitter predicted
+  for it; 22,764 with no usable prediction are dropped. This is a real piece of a real fly rather
+  than the whole animal, and we say so rather than implying otherwise.</p>
+  <p>The choice itself is made by letting that circuit spike. Each neuron is a leaky
+  integrate-and-fire unit: it adds up what arrives from the neurons feeding it, leaks a little
+  away between arrivals, and fires when it crosses a threshold. We run 1&nbsp;ms steps for
+  50&nbsp;ms of simulated time per decision, with a membrane time constant of 20&nbsp;ms. Each
+  unread neighbouring paper is assigned one of eight bands of input neurons and stimulates it at a
+  rate set by how often that paper has been cited. Paywalled neighbours drive a band too, so they
+  push the circuit around without ever being a legal choice &mdash; the fly senses the wall.
+  The descending neurons are split into eight matching readout groups, and the paper whose group
+  fires the most wins, with ties broken by the random number generator. Gain is calibrated so the
+  network averages 9.93&nbsp;Hz, roughly a biological firing rate. Nothing learns and nothing about
+  the fly changes between steps, and the random seed is fixed, so any run can be reproduced
+  exactly.</p>
 
   <h2>What counts as open</h2>
+  <p>OpenAlex labels each paper with how it is made free, if it is. Here is what each label means
+  and how the fly treats it.</p>
   <table>
     <tr><th>OpenAlex status</th><th>Here</th><th>Why</th></tr>
     <tr><td>diamond</td><td>corridor</td><td>fully OA journal, no author charges</td></tr>
@@ -251,8 +274,10 @@
     <tr><td>bronze</td><td>trapdoor &mdash; impassable</td><td>free today at the publisher's discretion, no open license</td></tr>
     <tr><td>closed</td><td>wall</td><td>not free to read</td></tr>
   </table>
-  <p>Excluding bronze is stricter than OpenAlex's own <code>is_oa</code>. Because that choice makes
-  paywalls look worse, the bronze-inclusive number is published too.</p>
+  <p>Bronze is the hard case: the publisher has put the paper up for free but granted no licence,
+  so it can be taken down again and cannot be reused. We treat it as impassable, which is stricter
+  than OpenAlex's own <code>is_oa</code> flag. Because that choice makes paywalls look worse, the
+  bronze-inclusive number is published too.</p>
 
   <h2>What the run above found</h2>
   <p id="run-story">The run above is one draw from those 100 seeds.</p>
@@ -264,26 +289,41 @@
 
   <h2>One run is one run</h2>
   <p>A different seed gives different numbers, so we ran all 100 of them.
-  <strong>75 of the 100 randomly drawn papers were paywalled at the seed</strong>: the fly could not
-  take a single step. Of the 25 that let it start, the median run read 158 papers and bounced off
-  about 2,000 walls &mdash; and 20 of those 25 hit our 800-paper cap, so their totals are floors,
-  not ceilings. Across all 100 seeds it read <strong>4,022 papers</strong> and hit
-  <strong>69,102 paywalls</strong>: about 17 walls for every paper it could open, roughly 5% of
-  everything it touched. The individual numbers move from run to run. The finding does not.</p>
+  75 of the 100 randomly drawn papers were paywalled at the seed:
+  the fly could not take a single step, because a reader
+  starting there has nothing to read. Of the 25 that let it start, the median run read 158 papers
+  and bounced off about 2,000 walls &mdash; and 20 of those 25 hit our 800-paper cap, so their
+  totals are floors, not ceilings. Across all 100 seeds it read 4,022 papers
+  and hit 69,102 paywalls: about 17 walls for every paper it could open, roughly 5% of everything it touched. The
+  individual numbers move from run to run. The finding does not.</p>
 
   <h2>Did the brain matter?</h2>
-  <p id="control">Most of the fly-brain demos going around do not run a control. We did: the whole
-  pipeline was rebuilt on degree-preserving shuffles of the same connectome, and we compared how
-  well the readout identifies which input channel was driven. One shuffle would be an anecdote, so
-  we run several and compare against their spread.</p>
+  <p id="control">Most of the fly-brain demos going around do not run a control, so there is no way
+  to tell whether the fly's wiring is doing the work or whether anything of that size would behave
+  the same. We ran one. The whole pipeline was rebuilt on shuffled copies of the same connectome:
+  each neuron keeps its number of connections, but who it talks to is randomised, which destroys
+  the fly's actual circuitry while leaving its size and shape intact. Then we measured how reliably
+  the readout groups identify which input band was driven &mdash; if the real wiring matters, the
+  real brain should do this better than the shuffles. One shuffle would be an anecdote, so we ran
+  several and compared the real brain against their spread.</p>
   <div id="control-numbers"></div>
   <p>The code, every trace, the corpus and this control are at
   <a href="https://github.com/crimconsortium/fruitfly">github.com/crimconsortium/fruitfly</a>.
   Code MIT, our data and figures CC-BY 4.0.</p>
 
+  <h2>Notes</h2>
+  <ol class="notes">
+    <li id="n1"><em>European Journal of Criminology</em> and <em>Crime Science</em> are not in it.
+    That is Clarivate's boundary, not ours &mdash; and the authoritative version of that list is
+    available only to Web of Science subscribers, so the conventional definition of criminology is
+    itself paywalled. <a href="#r1">&#8617;</a></li>
+  </ol>
+
   <footer>
-    A <a href="https://crimconsortium.com">CrimConsortium</a> project &mdash;
-    making criminology free and useful.
+    Created by <a href="https://scottjacques.pubpub.org">Scott Jacques</a> with
+    <a href="https://www.perplexity.ai">Perplexity</a>, supported by
+    <a href="https://crimconsortium.com">CrimConsortium</a> &mdash; making criminology free and
+    useful.
   </footer>
 </div>
 <script id="run">
@@ -319,10 +359,10 @@ fetch('stats.json', { cache: 'no-store' }).then(r => {
     hybrid: 'It carried an open licence inside a subscription journal.'
   }[seed.oa_status] || '';
   if (seed.title && Number.isInteger(r.reachable) && Number.isInteger(r.walls_hit)) {
-    story.innerHTML = `It was dropped on <strong>&ldquo;${escape(seed.title)}&rdquo;</strong>`
+    story.innerHTML = `It was dropped on &ldquo;${escape(seed.title)}&rdquo;`
       + `${seed.journal ? ` (${escape(seed.journal)}${seed.year ? ' ' + seed.year : ''})` : ''}`
-      + `, one of the 100 seeds. ${openBecause} From there it read <strong>${r.reachable.toLocaleString()} papers</strong>`
-      + ` and hit <strong>${r.walls_hit.toLocaleString()} paywalls</strong>`
+      + `, one of the 100 seeds. ${openBecause} From there it read ${r.reachable.toLocaleString()} papers`
+      + ` and hit ${r.walls_hit.toLocaleString()} paywalls`
       + `${Number.isInteger(r.n_steps) ? ` over ${r.n_steps.toLocaleString()} decisions` : ''}`
       + `, and then ${why}.`;
   }
@@ -338,16 +378,15 @@ fetch('stats.json', { cache: 'no-store' }).then(r => {
   if (c.selectivity_real === undefined || c.selectivity_real === null) {
     el.textContent = 'No calibration was recorded for this run.';
   } else {
-    let line = `Real connectome: <strong>${pct(c.selectivity_real)}</strong>. `;
+    let line = `Real connectome: ${pct(c.selectivity_real)}. `;
     if (shuffled !== undefined && shuffled !== null) {
-      line += `Shuffled control: <strong>${pct(shuffled)}</strong>`;
+      line += `Shuffled control: ${pct(shuffled)}`;
       if (nReps > 1) line += ` (mean of ${nReps}, sd ${pct(c.selectivity_shuffled_sd)})`;
       line += '. ';
     }
     line += `Chance: ${pct(c.chance_level)}.`;
     if (reps.length) line += ` Replicates: ${reps.map(pct).join(', ')}.`;
-    el.innerHTML = `<p>${line}</p>`
-      + (c.verdict ? `<p>${escape(c.verdict)}</p>` : '');
+    el.innerHTML = `<p>${line}${c.verdict ? ' ' + escape(c.verdict) : ''}</p>`;
   }
 }).catch(error => {
   console.error('Unable to load run statistics:', error);

@@ -14,7 +14,7 @@ import yaml
 ROOT = Path(__file__).resolve().parent.parent
 SITE = ROOT / "site"
 ORIGIN = "https://fruitfly.crimconsortium.com"
-UPDATED = "2026-09-12T11:30:00-04:00"
+UPDATED = "2026-09-12T12:05:00-04:00"
 
 
 class Page(HTMLParser):
@@ -339,8 +339,8 @@ def test_legacy_single_shuffle_calibration_remains_supported(extra):
         "selectivity_real": 0.41, "selectivity_shuffled": 0.67, "chance_level": 0.125, **extra,
     }})
     html = result["elements"]["control-numbers"]["html"]
-    assert "Real connectome: <strong>41%</strong>" in html
-    assert "Shuffled control: <strong>67%</strong>" in html
+    assert "Real connectome: 41%" in html
+    assert "Shuffled control: 67%" in html
     assert "Chance: 13%." in html
     assert "mean of" not in html
 
@@ -391,7 +391,7 @@ def test_the_field_wide_numbers_on_the_page_match_the_measured_traces():
 def test_background_credits_the_connectome_and_the_access_evidence():
     body = (SITE / "index.html").read_text()
     # Both empirical claims on the page carry a source a reader can open.
-    assert "pubmed.ncbi.nlm.nih.gov/42691995" in body            # MaleCNS in Cell
+    assert "cell.com/cell/fulltext/S0092-8674(26)00942-6" in body  # MaleCNS in Cell
     assert "lesscrime.info/files/open_access_to_criminology_postprint.pdf" in body  # Ashby, JCJE
     assert "male-cns.janelia.org" in body and "openalex.org" in body
 
@@ -420,3 +420,24 @@ def test_the_page_carries_the_family_theme_toggle():
     for scheme in ('[data-theme="light"]', '[data-theme="dark"]'):
         block = body.split(scheme, 1)[1].split("}", 1)[0]
         assert used <= set(re.findall(r"(--[a-z-]+):", block)), scheme
+
+
+def test_prose_carries_no_bold_and_the_notes_resolve():
+    """Scott asked for no bold type in the copy; headings carry the hierarchy instead."""
+    body = (SITE / "index.html").read_text()
+    assert "<strong>" not in body and "<b " not in body
+    script, = [t for a, t in Page(SITE / "index.html").captured("script") if a.get("id") == "run"]
+    assert "<strong>" not in script
+
+    # Every endnote marker points at a note that exists, and every note points back.
+    markers = set(re.findall(r'<sup><a id="(r\d+)" href="#(n\d+)">', body))
+    assert markers
+    for ref, note in markers:
+        assert f'<li id="{note}">' in body
+        assert f'href="#{ref}"' in body
+
+
+def test_the_wordmark_links_home():
+    body = (SITE / "index.html").read_text()
+    assert '<a class="brand" href="https://crimconsortium.com">CRIMCONSORTIUM</a>' in body
+    assert "Created by" in body and "Perplexity" in body
