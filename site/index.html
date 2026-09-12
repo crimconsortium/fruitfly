@@ -31,7 +31,7 @@
 <meta property="og:video:type" content="video/mp4">
 <meta property="og:video:width" content="1280">
 <meta property="og:video:height" content="720">
-<meta property="og:updated_time" content="2026-09-12T10:35:00-04:00">
+<meta property="og:updated_time" content="2026-09-12T11:00:00-04:00">
 <meta property="og:see_also" content="https://github.com/crimconsortium/fruitfly">
 <meta property="og:see_also" content="https://crimconsortium.com">
 <meta name="twitter:card" content="player">
@@ -72,6 +72,18 @@
       "relatedLink": [
         "https://github.com/crimconsortium/fruitfly",
         "https://crimconsortium.com"
+      ],
+      "citation": [
+        {
+          "@type": "ScholarlyArticle",
+          "name": "Sexual dimorphism in the complete Drosophila male central nervous system connectome",
+          "identifier": "https://doi.org/10.1016/j.cell.2026.08.015"
+        },
+        {
+          "@type": "ScholarlyArticle",
+          "name": "The Open-Access Availability of Criminological Research to Practitioners and Policy Makers",
+          "identifier": "https://doi.org/10.1080/10511253.2020.1838588"
+        }
       ]
     }
   ]
@@ -118,26 +130,68 @@
   <p class="caption">An illustration of the idea, not the simulation. The measured run is
   below.</p>
 
+  <div class="stats" id="stats" role="status" aria-live="polite"></div>
+
   <video src="fly.mp4" muted loop playsinline controls preload="metadata"
   width="1280" height="720"></video>
 
-  <div class="stats" id="stats" role="status" aria-live="polite"></div>
+  <h2>Where this came from</h2>
+  <p>On 3 September 2026, about a hundred scientists at HHMI Janelia, the University of Cambridge,
+  the MRC Laboratory of Molecular Biology and Google Research published the first complete
+  connectome of an adult male <em>Drosophila</em> central nervous system in <em>Cell</em>:
+  <a href="https://pubmed.ncbi.nlm.nih.gov/42691995/">166,700 neurons and 11,710 neuron
+  types</a>, every one of them traced. <a href="https://research.google/blog/a-connectomics-milestone-mapping-the-complete-male-fruit-fly-brain/">Google
+  posted about it</a> and it went round the internet. The data itself, MaleCNS v1.0, had been
+  <a href="https://male-cns.janelia.org/">out since June</a> under
+  <a href="https://www.janelia.org/project-team/flyem/male-cns-connectome">CC-BY</a>, so anyone
+  could download a whole fly brain.</p>
+  <p>People did, immediately. Within a week the fly was
+  <a href="https://gizmodo.com/google-mapped-a-fruit-flys-brain-now-its-playing-doom-and-super-mario-64-2000808616">playing
+  Doom and Super Mario 64</a>, walking around
+  <a href="https://github.com/evnsnclr/neurocraft-fly-public">Minecraft</a>, and
+  <a href="https://github.com/MarkUnthank/flyhard">driving a car in a simulator</a>. We pointed the
+  same trick at something we care about.</p>
 
-  <h2>What is real here</h2>
-  <p>The wiring is the real thing: <strong>MaleCNS v1.0</strong>, the complete connectome of an
-  adult male <em>Drosophila</em> central nervous system &mdash; about 166,700 neurons, published
-  September 2026 by HHMI Janelia, the University of Cambridge, the MRC LMB, and Google Research,
-  released CC-BY. The citation graph is real too, from OpenAlex (CC0). The paywalls are extremely
-  real.</p>
-  <p>The fly is not smart. It is not learning. It is a reactive random walker whose turns are
-  decided by spikes propagating through that wiring. That is the point: even a bug can explore an
-  open literature, and even a bug is stopped by a paywall.</p>
+  <h2>Criminology is largely paywalled</h2>
+  <p>This is measured, not assumed. Matthew Ashby checked 12,541 articles across 97 criminology
+  journals published 2017&ndash;2019 and found that
+  <a href="https://lesscrime.info/files/open_access_to_criminology_postprint.pdf">22% were
+  available to non-subscribers</a> &mdash; in his words, &ldquo;about half that found in other
+  disciplines, even though authors had the right to make articles open without payment in at least
+  95% of cases.&rdquo; More than three quarters of the field was hidden. He also found that Taylor
+  &amp; Francis, the largest publisher in criminology, had the lowest open share of any publisher
+  &mdash; and his study appeared in a Taylor &amp; Francis journal, where
+  <a href="https://www.tandfonline.com/doi/abs/10.1080/10511253.2020.1838588">the version of
+  record is behind the paywall</a> and the readable copy is the manuscript he archived himself.</p>
+  <p>Our own index of the field agrees: of 30,654 articles in 51 journals, <strong>31% are open
+  under the rule below</strong>, 35% if you count bronze. So roughly two papers in three are a
+  wall. The fly is just a way to walk through that.</p>
 
-  <h2>We did not choose the journals</h2>
+  <h2>How we did it</h2>
   <p>The corpus is the Web of Science research area <strong>Criminology &amp; Penology</strong>,
-  adopted as-is. <em>European Journal of Criminology</em> and <em>Crime Science</em> are not in it.
-  That is Clarivate's boundary, not ours. The authoritative version of that list is available only
-  to Web of Science subscribers: the conventional definition of criminology is itself paywalled.</p>
+  adopted as-is: 51 journals, 30,654 articles. <em>European Journal of Criminology</em> and
+  <em>Crime Science</em> are not in it. That is Clarivate's boundary, not ours &mdash; and the
+  authoritative version of that list is available only to Web of Science subscribers, so the
+  conventional definition of criminology is itself paywalled. Titles, reference lists and
+  access status come from <a href="https://openalex.org">OpenAlex</a>, CC0.</p>
+  <p><strong>Sampling.</strong> We drew <strong>100 seed papers at random</strong> from that
+  corpus &mdash; no curation, no hand-picking a paper with a good reference list. The fly is
+  dropped on the seed and walks outward through reference lists, one paper at a time, never
+  revisiting. A run ends when nothing readable is left next to it, or at a cap of 800 papers.</p>
+  <p><strong>The brain.</strong> From the MaleCNS v1.0 flat connectome we keep the 1,342 descending
+  neurons &mdash; the ones that carry commands out to the body &mdash; plus two hops of their
+  strongest upstream partners, capped at <strong>20,000 neurons and 1,016,133 signed
+  connections</strong> out of the 151.9 million in the source. Connections weaker than five
+  synapses are dropped, and each is made excitatory or inhibitory from its predicted
+  neurotransmitter; 22,764 with no usable prediction are dropped. It is a real subgraph of a real
+  fly, not the whole fly, and we say so.</p>
+  <p><strong>The decision.</strong> Leaky integrate-and-fire neurons, 1&nbsp;ms steps, 50&nbsp;ms
+  of spiking per decision, membrane time constant 20&nbsp;ms. Each unvisited neighbour drives one
+  of eight bands of input neurons at a rate set by its citation count; paywalled neighbours drive a
+  band too, so they disturb the dynamics without ever being selectable. The descending neurons form
+  eight readout groups and the candidate whose group fires most wins, ties broken by the random
+  number generator. Gain is calibrated to a mean rate of 9.93&nbsp;Hz. Nothing learns, nothing about
+  the fly changes between steps, and the seed is fixed, so any run reproduces exactly.</p>
 
   <h2>What counts as open</h2>
   <table>
@@ -152,6 +206,23 @@
   <p>Excluding bronze is stricter than OpenAlex's own <code>is_oa</code>. Because that choice makes
   paywalls look worse, the bronze-inclusive number is published too.</p>
 
+  <h2>What the run above found</h2>
+  <p id="run-story">The run above is one draw from those 100 seeds.</p>
+  <p>The video shows both sides of that: on the left, spikes moving through the real wiring; on the
+  right, the single paper the fly is standing on and every reference it senses from there, each one
+  marked open or paywalled. Almost all of them are paywalled. That is the whole finding &mdash; the
+  fly is not clever and does not need to be, because what stops it is not the difficulty of the
+  literature but the wall in front of it.</p>
+
+  <h2>One run is one run</h2>
+  <p>A different seed gives different numbers, so we ran all 100 of them.
+  <strong>75 of the 100 randomly drawn papers were paywalled at the seed</strong>: the fly could not
+  take a single step. Of the 25 that let it start, the median run read 158 papers and bounced off
+  about 2,000 walls &mdash; and 20 of those 25 hit our 800-paper cap, so their totals are floors,
+  not ceilings. Across all 100 seeds it read <strong>4,022 papers</strong> and hit
+  <strong>69,102 paywalls</strong>: about 17 walls for every paper it could open, roughly 5% of
+  everything it touched. The individual numbers move from run to run. The finding does not.</p>
+
   <h2>We checked whether the brain mattered</h2>
   <div class="null" id="control">
     <p>Most of the fly-brain demos going around do not run a control. We did: the whole pipeline
@@ -160,12 +231,10 @@
     several and compare against their spread.</p>
     <p id="control-numbers"></p>
   </div>
-
-  <h2>Everything is open</h2>
-  <p>Code, data, the full trace, and the negative control:
-  <a href="https://github.com/crimconsortium/fruitfly">github.com/crimconsortium/fruitfly</a>.
-  Code MIT, our data and figures CC-BY 4.0. Connectome CC-BY (HHMI Janelia / Cambridge / MRC LMB /
-  Google Research). Metadata from OpenAlex, CC0.</p>
+  <p>Everything behind this is open, which is the least we can do given the subject: the code, every
+  trace, the corpus and this control live at
+  <a href="https://github.com/crimconsortium/fruitfly">github.com/crimconsortium/fruitfly</a>
+  &mdash; code MIT, our data and figures CC-BY 4.0.</p>
 
   <footer>
     A <a href="https://crimconsortium.com">CrimConsortium</a> project &mdash;
@@ -187,9 +256,32 @@ fetch('stats.json', { cache: 'no-store' }).then(r => {
   document.getElementById('stats').innerHTML = [
     ['papers read', count(r.reachable)],
     ['paywalls hit', count(r.walls_hit)],
-    ['moves', count(r.n_steps)],
     ['neurons simulated', count((s.engine || {}).neurons, true)]
   ].map(([k, v]) => `<div class="stat"><b>${v}</b><span>${k}</span></div>`).join('');
+
+  const story = document.getElementById('run-story');
+  const seed = s.seed || {};
+  const escape = t => String(t).replace(/[&<>"]/g, ch =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
+  const why = {
+    no_passable_neighbours: 'it stopped because every reference next to it was paywalled',
+    seed_paywalled: 'it never took a step: the seed itself was paywalled',
+    cap: 'it was still going when it reached our 800-paper cap'
+  }[r.truncated ? 'cap' : r.stuck_reason] || 'the run ended';
+  const openBecause = {
+    green: 'It was readable only because someone had archived a free copy of it.',
+    diamond: 'It was published in a fully open journal.',
+    gold: 'It was published open access.',
+    hybrid: 'It carried an open licence inside a subscription journal.'
+  }[seed.oa_status] || '';
+  if (seed.title && Number.isInteger(r.reachable) && Number.isInteger(r.walls_hit)) {
+    story.innerHTML = `It was dropped on <strong>&ldquo;${escape(seed.title)}&rdquo;</strong>`
+      + `${seed.journal ? ` (${escape(seed.journal)}${seed.year ? ' ' + count(seed.year) : ''})` : ''}`
+      + `, one of the 100 seeds. ${openBecause} From there it read <strong>${r.reachable.toLocaleString()} papers</strong>`
+      + ` and hit <strong>${r.walls_hit.toLocaleString()} paywalls</strong>`
+      + `${Number.isInteger(r.n_steps) ? ` over ${r.n_steps.toLocaleString()} decisions` : ''}`
+      + `, and then ${why}.`;
+  }
 
   // Tolerate both calibration formats: selectivity_shuffled_mean (with replicates)
   // and the older single selectivity_shuffled.

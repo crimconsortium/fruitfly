@@ -14,7 +14,7 @@ import yaml
 ROOT = Path(__file__).resolve().parent.parent
 SITE = ROOT / "site"
 ORIGIN = "https://fruitfly.crimconsortium.com"
-UPDATED = "2026-09-12T10:35:00-04:00"
+UPDATED = "2026-09-12T11:00:00-04:00"
 
 
 class Page(HTMLParser):
@@ -247,7 +247,7 @@ function element() {
     }
   };
 }
-const elements = {stats: element(), 'control-numbers': element()};
+const elements = {stats: element(), 'control-numbers': element(), 'run-story': element()};
 const calls = [], errors = [];
 const context = {
   document: {
@@ -299,9 +299,14 @@ def test_stats_requests_fresh_data_and_preserves_displayed_metrics():
     assert cards == [
         (str(stats["result"]["reachable"]), "papers read"),
         (str(stats["result"]["walls_hit"]), "paywalls hit"),
-        (str(stats["result"]["n_steps"]), "moves"),
         (f'{stats["engine"]["neurons"]:,}', "neurons simulated"),
     ]
+    # "moves" duplicated "papers read", so it is deliberately absent.
+    assert "moves" not in result["elements"]["stats"]["html"]
+    story = result["elements"]["run-story"]["html"]
+    assert stats["seed"]["title"] in story
+    assert f'{stats["result"]["reachable"]:,} papers' in story
+    assert f'{stats["result"]["walls_hit"]:,} paywalls' in story
     control = result["elements"]["control-numbers"]["html"]
     assert f'(mean of {stats["calibration"]["n_shuffle_replicates"]}, sd ' in control
     assert stats["calibration"]["verdict"] in control
@@ -322,7 +327,6 @@ def test_missing_counts_are_not_reported_as_zero_but_real_zero_is_preserved():
     result = run_stats({"result": {"reachable": 0, "walls_hit": None, "n_steps": 0}})
     html = result["elements"]["stats"]["html"]
     assert "<b>0</b><span>papers read</span>" in html
-    assert "<b>0</b><span>moves</span>" in html
     assert "<b>n/a</b><span>paywalls hit</span>" in html
     assert "<b>n/a</b><span>neurons simulated</span>" in html
     assert result["elements"]["control-numbers"]["text"] == "No calibration was recorded for this run."
@@ -358,6 +362,31 @@ def test_homepage_leads_with_the_illustration_then_the_measured_run():
         assert (video["width"], video["height"]) == ("1280", "720")
     body = (SITE / "index.html").read_text()
     assert "not the simulation" in body
+    # The run's numbers sit between the illustration and the measured render.
+    assert body.index('id="stats"') > body.index('src="fly-loop.mp4"')
+    assert body.index('id="stats"') < body.index('src="fly.mp4"')
+
+
+def test_the_field_wide_numbers_on_the_page_match_the_measured_traces():
+    import csv
+    rows = list(csv.DictReader((ROOT / "data/traces/summary.csv").open()))
+    body = (SITE / "index.html").read_text()
+    blocked = sum(row["stuck_reason"] == "seed_paywalled" for row in rows)
+    read = sum(int(row["reachable"]) for row in rows)
+    walls = sum(int(row["walls_hit"]) for row in rows)
+    truncated = sum(row["truncated"] == "True" for row in rows)
+    assert f"{blocked} of the {len(rows)} randomly drawn papers were paywalled" in body
+    assert f"{read:,} papers" in body
+    assert f"{walls:,} paywalls" in body
+    assert f"{truncated} of those {len(rows) - blocked} hit our 800-paper cap" in body
+
+
+def test_background_credits_the_connectome_and_the_access_evidence():
+    body = (SITE / "index.html").read_text()
+    # Both empirical claims on the page carry a source a reader can open.
+    assert "pubmed.ncbi.nlm.nih.gov/42691995" in body            # MaleCNS in Cell
+    assert "lesscrime.info/files/open_access_to_criminology_postprint.pdf" in body  # Ashby, JCJE
+    assert "male-cns.janelia.org" in body and "openalex.org" in body
 
 
 def test_page_claims_no_crimrxiv_affiliation():
