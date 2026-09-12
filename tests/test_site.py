@@ -14,7 +14,7 @@ import yaml
 ROOT = Path(__file__).resolve().parent.parent
 SITE = ROOT / "site"
 ORIGIN = "https://fruitfly.crimconsortium.com"
-UPDATED = "2026-09-11T19:40:00-04:00"
+UPDATED = "2026-09-12T10:35:00-04:00"
 
 
 class Page(HTMLParser):
@@ -125,7 +125,6 @@ def test_structured_data_uses_only_known_brand_and_related_links():
     related = graph["WebPage"]["relatedLink"]
     assert set(related) == {
         "https://github.com/crimconsortium/fruitfly",
-        "https://www.crimrxiv.com",
         "https://crimconsortium.com",
     }
     assert set(related).issubset({attrs.get("href") for attrs in page.attrs("a")})
@@ -166,7 +165,7 @@ def test_domain_indexing_and_site_assets():
     assert [el.text for el in sitemap.findall("s:url/s:lastmod", ns)] == [UPDATED]
     assert ElementTree.parse(SITE / "favicon.svg").getroot().tag.endswith("svg")
     for filename in ("index.html", "player.html", "stats.json", "fly.mp4", "fly.gif",
-                     "fly-cartoon.mp4", "fly-cartoon.jpg", "favicon.svg"):
+                     "fly-loop.mp4", "fly-loop.jpg", "favicon.svg"):
         assert (SITE / filename).stat().st_size > 0
 
 
@@ -206,7 +205,7 @@ def test_pages_uses_latest_main_and_only_complete_site_files():
     }
     check = next(step for step in steps if step.get("name") == "Require the complete static site")
     for filename in ("index.html", "player.html", "stats.json", "fly.mp4", "fly.gif",
-                     "fly-cartoon.mp4", "CNAME"):
+                     "fly-loop.mp4", "CNAME"):
         assert filename in check["run"]
     assert steps.index(check) < steps.index(actions["actions/upload-pages-artifact@v3"])
     assert not any("src/" in step.get("run", "") for step in steps)
@@ -346,15 +345,21 @@ def test_calibration_verdict_is_plain_text_not_html():
     assert "&lt;b&gt;Keep this literal&lt;/b&gt;" in result["elements"]["control-numbers"]["html"]
 
 
-def test_homepage_offers_the_cartoon_cut_alongside_the_instrument():
+def test_homepage_leads_with_the_illustration_then_the_measured_run():
     page = Page(SITE / "index.html")
-    videos = {attrs["src"]: attrs for attrs in page.attrs("video")}
-    assert set(videos) == {"fly.mp4", "fly-cartoon.mp4"}
-    # The honest render stays the hero: it autoplays, the cartoon does not.
-    assert "autoplay" in videos["fly.mp4"]
-    cartoon = videos["fly-cartoon.mp4"]
-    assert "autoplay" not in cartoon
-    assert cartoon["preload"] == "metadata"
-    assert cartoon["poster"] == "fly-cartoon.jpg"
-    assert (cartoon["width"], cartoon["height"]) == ("1280", "720")
-    assert any(attrs.get("href") == "fly-cartoon.mp4" for attrs in page.attrs("a"))
+    videos = [attrs for attrs in page.attrs("video")]
+    assert [v["src"] for v in videos] == ["fly-loop.mp4", "fly.mp4"]
+    loop, run = videos
+    # The looping illustration is the hook; it must not be mistaken for the simulation.
+    assert loop["poster"] == "fly-loop.jpg"
+    assert "loop" in loop and "muted" in loop
+    assert "autoplay" in loop and "autoplay" not in run
+    for video in videos:
+        assert (video["width"], video["height"]) == ("1280", "720")
+    body = (SITE / "index.html").read_text()
+    assert "not the simulation" in body
+
+
+def test_page_claims_no_crimrxiv_affiliation():
+    body = (SITE / "index.html").read_text()
+    assert "rimrxiv" not in body.lower()

@@ -13,7 +13,6 @@
 <link rel="alternate" hreflang="x-default" href="https://fruitfly.crimconsortium.com/">
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="dns-prefetch" href="https://github.com">
-<link rel="dns-prefetch" href="https://www.crimrxiv.com">
 <link rel="dns-prefetch" href="https://crimconsortium.com">
 <meta property="og:title" content="Fruit fly explores open criminology | CrimConsortium">
 <meta property="og:description" content="Watch a simulated fruit fly explore the criminology citation graph. Open-access papers are corridors, paywalls are walls. Code, data and controls are open.">
@@ -32,9 +31,8 @@
 <meta property="og:video:type" content="video/mp4">
 <meta property="og:video:width" content="1280">
 <meta property="og:video:height" content="720">
-<meta property="og:updated_time" content="2026-09-11T19:40:00-04:00">
+<meta property="og:updated_time" content="2026-09-12T10:35:00-04:00">
 <meta property="og:see_also" content="https://github.com/crimconsortium/fruitfly">
-<meta property="og:see_also" content="https://www.crimrxiv.com">
 <meta property="og:see_also" content="https://crimconsortium.com">
 <meta name="twitter:card" content="player">
 <meta name="twitter:title" content="Fruit fly explores open criminology | CrimConsortium">
@@ -73,7 +71,6 @@
       "isPartOf": {"@id": "https://fruitfly.crimconsortium.com/#website"},
       "relatedLink": [
         "https://github.com/crimconsortium/fruitfly",
-        "https://www.crimrxiv.com",
         "https://crimconsortium.com"
       ]
     }
@@ -87,10 +84,12 @@
          font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif; }
   .wrap { max-width:860px; margin:0 auto; padding:48px 20px 96px; }
   .brand { color:var(--orange); font-weight:700; letter-spacing:.14em; font-size:13px; }
-  h1 { font-size:clamp(28px,5vw,44px); line-height:1.15; margin:.4em 0 .2em; }
+  h1 { font-size:clamp(26px,4.4vw,42px); line-height:1.15; margin:.4em 0 .2em;
+       text-wrap:balance; }
   h1 em { color:var(--orange); font-style:normal; }
   h2 { font-size:20px; margin-top:2.4em; border-bottom:1px solid #222; padding-bottom:.3em; }
   p.lede { font-size:19px; color:#d8d8d8; }
+  p.caption { color:var(--dim); font-size:14px; margin:.2em 0 2.2em; }
   video { width:100%; background:#000; border:1px solid #222; margin:28px 0 8px; }
   .stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:14px; margin:24px 0; }
   .stat { border:1px solid #222; padding:14px; }
@@ -107,22 +106,21 @@
 </head>
 <body>
 <div class="wrap">
-  <div class="brand">CRIMRXIV &middot; CRIMCONSORTIUM</div>
+  <div class="brand">CRIMCONSORTIUM</div>
   <h1>A fruit fly looks for <em>criminology it can read</em></h1>
   <p class="lede">We dropped a simulated fruit fly brain onto a randomly chosen criminology
   paper and let it walk outward through reference lists. Open-access papers are corridors.
   Paywalled papers are walls. It explores until it runs out of things it can read.</p>
 
-  <video src="fly.mp4" autoplay muted loop playsinline controls></video>
+  <video src="fly-loop.mp4" poster="fly-loop.jpg" autoplay muted loop playsinline controls
+  width="1280" height="720"></video>
+  <p class="caption">An illustration of the idea, not the simulation. The measured run is
+  below.</p>
+
+  <video src="fly.mp4" muted loop playsinline controls preload="metadata"
+  width="1280" height="720"></video>
 
   <div class="stats" id="stats" role="status" aria-live="polite"></div>
-
-  <h2>The same run, as a cartoon</h2>
-  <p>Same trace, same titles, same running totals &mdash; the fly just tries every reference on
-  the page one at a time, and the locked ones slam in its face. Direct link:
-  <a href="fly-cartoon.mp4">fly-cartoon.mp4</a>.</p>
-  <video src="fly-cartoon.mp4" poster="fly-cartoon.jpg" muted loop playsinline controls
-  preload="metadata" width="1280" height="720"></video>
 
   <h2>What is real here</h2>
   <p>The wiring is the real thing: <strong>MaleCNS v1.0</strong>, the complete connectome of an
@@ -162,13 +160,6 @@
     <p id="control-numbers"></p>
   </div>
 
-  <h2>Corrections</h2>
-  <p>An earlier run of this pipeline reported that 99% of seed papers were paywalled. That was
-  wrong; the figure is 75%. Twenty-five of 100 seeds were open, but 24 of those hit the crawl's
-  compute cap and were then excluded from the headline, leaving 75 blocked and 1 open. Hitting a
-  compute cap says nothing about whether a paper was readable. Seed-level statistics now use every
-  seed, and a regression test fails if that ever changes back.</p>
-
   <h2>Everything is open</h2>
   <p>Code, data, the full trace, and the negative control:
   <a href="https://github.com/crimconsortium/fruitfly">github.com/crimconsortium/fruitfly</a>.
@@ -176,8 +167,7 @@
   Google Research). Metadata from OpenAlex, CC0.</p>
 
   <footer>
-    A <a href="https://www.crimrxiv.com">CrimRxiv</a> /
-    <a href="https://crimconsortium.com">CrimConsortium</a> project &mdash;
+    A <a href="https://crimconsortium.com">CrimConsortium</a> project &mdash;
     making criminology free and useful.
   </footer>
 </div>

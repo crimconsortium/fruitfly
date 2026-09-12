@@ -95,9 +95,6 @@ jobs:
       - name: Render the video
         run: PYTHONPATH=src python src/render.py --trace "${{ steps.pick.outputs.trace }}"
 
-      - name: Render the cartoon cut
-        run: PYTHONPATH=src python src/cartoon.py --trace "${{ steps.pick.outputs.trace }}"
-
       - name: Commit everything
         run: |
           git config user.name "github-actions[bot]"
