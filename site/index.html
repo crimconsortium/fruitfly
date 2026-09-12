@@ -31,7 +31,7 @@
 <meta property="og:video:type" content="video/mp4">
 <meta property="og:video:width" content="1280">
 <meta property="og:video:height" content="720">
-<meta property="og:updated_time" content="2026-09-12T11:15:00-04:00">
+<meta property="og:updated_time" content="2026-09-12T11:30:00-04:00">
 <meta property="og:see_also" content="https://github.com/crimconsortium/fruitfly">
 <meta property="og:see_also" content="https://crimconsortium.com">
 <meta name="twitter:card" content="player">
@@ -90,35 +90,84 @@
 }
 </script>
 <style>
-  :root { --orange:#f68212; --bg:#000; --fg:#f0f0f0; --dim:#9a9a9a; }
+  /* Palette and toggle behaviour inherited from the other CrimConsortium tools
+     (Faculty Explorer, Mentor Match, Is Your Criminology Open?). */
+  :root, [data-theme="light"] {
+    --orange:#f68212; --bg:#f7f5f1; --fg:#0e0e0e; --dim:#5a5750;
+    --lede:#2b2925; --line:#d4cfc2; --rule:#beb9aa; --panel:#ece8df;
+  }
+  [data-theme="dark"] {
+    --orange:#f68212; --bg:#000; --fg:#f0f0f0; --dim:#9a9a9a;
+    --lede:#d8d8d8; --line:#1c1c1c; --rule:#222; --panel:#141414;
+  }
   * { box-sizing:border-box; }
   body { margin:0; background:var(--bg); color:var(--fg);
          font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif; }
   .wrap { max-width:860px; margin:0 auto; padding:48px 20px 96px; }
+  .topbar { display:flex; align-items:center; justify-content:space-between; gap:16px; }
   .brand { color:var(--orange); font-weight:700; letter-spacing:.14em; font-size:13px; }
+  .icon-btn { display:inline-flex; align-items:center; justify-content:center;
+              width:40px; height:40px; border-radius:8px; background:none; cursor:pointer;
+              color:var(--dim); border:1px solid transparent; transition:all .15s ease; }
+  .icon-btn:hover { background:var(--panel); color:var(--fg); border-color:var(--rule); }
   h1 { font-size:clamp(26px,4.4vw,42px); line-height:1.15; margin:.4em 0 .2em;
        text-wrap:balance; }
   h1 em { color:var(--orange); font-style:normal; }
-  h2 { font-size:20px; margin-top:2.4em; border-bottom:1px solid #222; padding-bottom:.3em; }
-  p.lede { font-size:19px; color:#d8d8d8; }
+  h2 { font-size:20px; margin-top:2.4em; border-bottom:1px solid var(--rule); padding-bottom:.3em; }
+  p.lede { font-size:19px; color:var(--lede); }
   p.caption { color:var(--dim); font-size:14px; margin:.2em 0 2.2em; }
   video { width:100%; height:auto; aspect-ratio:16/9; background:#000;
-          border:1px solid #222; margin:28px 0 8px; }
+          border:1px solid var(--rule); margin:28px 0 8px; }
   .stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:14px; margin:24px 0; }
-  .stat { border:1px solid #222; padding:14px; }
+  .stat { border:1px solid var(--rule); padding:14px; }
   .stat b { display:block; font-size:30px; color:var(--orange); }
   .stat span { font-size:12px; color:var(--dim); text-transform:uppercase; letter-spacing:.08em; }
   table { width:100%; border-collapse:collapse; font-size:14px; }
-  th,td { text-align:left; padding:7px 8px; border-bottom:1px solid #1c1c1c; }
+  th,td { text-align:left; padding:7px 8px; border-bottom:1px solid var(--line); }
   th { color:var(--dim); font-weight:600; }
-  code { background:#141414; padding:1px 5px; color:var(--orange); }
+  code { background:var(--panel); padding:1px 5px; color:var(--orange); }
   a { color:var(--orange); }
   footer { margin-top:64px; color:var(--dim); font-size:13px; }
 </style>
+<script id="theme">
+/* Same toggle as the other CrimConsortium tools: follows the system scheme on
+   load, flips on click, and stores nothing. */
+(function () {
+  var SUN = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>';
+  var MOON = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+  function renderIcon() {
+    var dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    var btn = document.querySelector('[data-theme-toggle]');
+    if (btn) btn.innerHTML = dark ? SUN : MOON;
+  }
+  function applyTheme(t) {
+    document.documentElement.setAttribute('data-theme', t);
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute('content', t === 'dark' ? '#000000' : '#f7f5f1');
+    renderIcon();
+  }
+  function preferredTheme() {
+    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+      ? 'dark' : 'light';
+  }
+  document.addEventListener('click', function (e) {
+    var btn = e.target.closest ? e.target.closest('[data-theme-toggle]') : null;
+    if (!btn) return;
+    applyTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+  });
+  applyTheme(preferredTheme());
+  document.addEventListener('DOMContentLoaded', renderIcon);
+})();
+</script>
 </head>
 <body>
 <div class="wrap">
-  <div class="brand">CRIMCONSORTIUM</div>
+  <div class="topbar">
+    <div class="brand">CRIMCONSORTIUM</div>
+    <button class="icon-btn" type="button" data-theme-toggle aria-label="Toggle color scheme">
+      <!-- icon injected by the theme script -->
+    </button>
+  </div>
   <h1>A fruit fly looks for <em>criminology it can read</em></h1>
   <p class="lede">We dropped a simulated fruit fly brain onto a randomly chosen criminology
   paper and let it walk outward through reference lists. Open-access papers are corridors.
@@ -237,7 +286,7 @@
     making criminology free and useful.
   </footer>
 </div>
-<script>
+<script id="run">
 fetch('stats.json', { cache: 'no-store' }).then(r => {
   if (!r.ok) throw new Error(`Statistics request failed (${r.status})`);
   return r.json();

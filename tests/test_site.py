@@ -14,7 +14,7 @@ import yaml
 ROOT = Path(__file__).resolve().parent.parent
 SITE = ROOT / "site"
 ORIGIN = "https://fruitfly.crimconsortium.com"
-UPDATED = "2026-09-12T11:15:00-04:00"
+UPDATED = "2026-09-12T11:30:00-04:00"
 
 
 class Page(HTMLParser):
@@ -281,7 +281,7 @@ def run_stats(stats, mode="success"):
     if node is None:
         pytest.skip("Node is optional; needed only to execute the browser statistics script")
     page = Page(SITE / "index.html")
-    script, = [text for attrs, text in page.captured("script") if not attrs.get("type")]
+    script, = [text for attrs, text in page.captured("script") if attrs.get("id") == "run"]
     result = subprocess.run(
         [node, "-e", NODE_RUNNER],
         input=json.dumps({"script": script, "stats": stats, "mode": mode}),
@@ -399,3 +399,24 @@ def test_background_credits_the_connectome_and_the_access_evidence():
 def test_page_claims_no_crimrxiv_affiliation():
     body = (SITE / "index.html").read_text()
     assert "rimrxiv" not in body.lower()
+
+
+def test_the_page_carries_the_family_theme_toggle():
+    """The other CrimConsortium tools ship this exact control, so this one does too."""
+    body = (SITE / "index.html").read_text()
+    assert 'class="icon-btn" type="button" data-theme-toggle' in body
+    assert 'aria-label="Toggle color scheme"' in body
+
+    theme, = [text for attrs, text in Page(SITE / "index.html").captured("script") if attrs.get("id") == "theme"]
+    # Follows the system scheme on load, flips on click, persists nothing.
+    assert "(prefers-color-scheme: dark)" in theme
+    assert "localStorage" not in theme and "cookie" not in theme
+    assert "setAttribute('data-theme', t)" in theme
+
+    for scheme in ("light", "dark"):
+        assert f'[data-theme="{scheme}"]' in body
+    # Both schemes define every colour the stylesheet consumes.
+    used = set(re.findall(r"var\((--[a-z-]+)\)", body))
+    for scheme in ('[data-theme="light"]', '[data-theme="dark"]'):
+        block = body.split(scheme, 1)[1].split("}", 1)[0]
+        assert used <= set(re.findall(r"(--[a-z-]+):", block)), scheme
