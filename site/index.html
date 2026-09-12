@@ -31,7 +31,7 @@
 <meta property="og:video:type" content="video/mp4">
 <meta property="og:video:width" content="1280">
 <meta property="og:video:height" content="720">
-<meta property="og:updated_time" content="2026-09-12T12:05:00-04:00">
+<meta property="og:updated_time" content="2026-09-12T12:20:00-04:00">
 <meta property="og:see_also" content="https://github.com/crimconsortium/fruitfly">
 <meta property="og:see_also" content="https://crimconsortium.com">
 <meta name="twitter:card" content="player">
@@ -211,20 +211,15 @@
   2017&ndash;2019 and found that
   <a href="https://lesscrime.info/files/open_access_to_criminology_postprint.pdf">22% were
   available to non-subscribers</a> &mdash; that is, readable by someone without a paid journal
-  subscription or a university library that has one. In his words, that is &ldquo;about half that
-  found in other disciplines, even though authors had the right to make articles open without
-  payment in at least 95% of cases.&rdquo; More than three quarters of the field was hidden. He
-  also found that Taylor &amp; Francis, the largest publisher in criminology, had the lowest open
-  share of any publisher &mdash; and his study appeared in a Taylor &amp; Francis journal, where
-  <a href="https://www.tandfonline.com/doi/abs/10.1080/10511253.2020.1838588">the version of
-  record is behind the paywall</a> and the readable copy is the manuscript he archived himself.</p>
+  subscription or a university library that has one. More than three quarters of the field was
+  hidden.</p>
   <p>A percentage like that counts what is open. It does not tell you what happens to a person
   doing research, because nobody reads a percentage: you start at one paper, look at what it cites,
   read what you can get, and follow that outward. Whether the field is usable depends on how far
   that chain gets before it dead-ends. We wanted to watch that happen instead of assuming it, so we
   built a reader we could actually run and count: the fly brain, dropped on a real criminology
-  paper, choosing its next paper from the references in front of it, stopped every time the paper
-  it wants is behind a paywall.</p>
+  paper, choosing its next paper from the references in front of it, stopped when it hits a
+  paywall.</p>
 
   <h2>How we did it</h2>
   <p>First we had to decide where the fly starts. If we picked the paper ourselves we would be
@@ -236,7 +231,7 @@
   <a href="https://openalex.org">OpenAlex</a>, a free public index of scholarly work released
   CC0, so the map the fly walks on is a map anyone else can download and check.</p>
   <p>Every run then goes the same way. The fly is dropped on its seed paper, and its next move is
-  chosen from the papers that paper cites. If it picks one it can read, that paper becomes where it
+  chosen from the referenced papers. If it picks one it can read, that paper becomes where it
   is standing and its references become the new options. It never goes back to a paper it has
   already read. A run ends when nothing readable is left next to it, or at a cap of 800 papers,
   which exists so one lucky run cannot walk all day.</p>
@@ -281,11 +276,11 @@
 
   <h2>What the run above found</h2>
   <p id="run-story">The run above is one draw from those 100 seeds.</p>
-  <p>The video shows both sides of that: on the left, spikes moving through the real wiring; on the
-  right, the single paper the fly is standing on and every reference it senses from there, each one
-  marked open or paywalled. Almost all of them are paywalled. That is the whole finding &mdash; the
-  fly is not clever and does not need to be, because what stops it is not the difficulty of the
-  literature but the wall in front of it.</p>
+  <p>The second video, above, shows both sides of that: on the left, spikes moving through the real
+  wiring; on the right, the single paper the fly is standing on and every reference it senses from
+  there, each one marked open or paywalled. Almost all of them are paywalled. That is the major
+  finding &mdash; <em>the fly is not clever and does not need to be, because what stops it is not
+  the difficulty of the literature but the wall in front of it.</em></p>
 
   <h2>One run is one run</h2>
   <p>A different seed gives different numbers, so we ran all 100 of them.
@@ -307,9 +302,13 @@
   real brain should do this better than the shuffles. One shuffle would be an anecdote, so we ran
   several and compared the real brain against their spread.</p>
   <div id="control-numbers"></div>
-  <p>The code, every trace, the corpus and this control are at
-  <a href="https://github.com/crimconsortium/fruitfly">github.com/crimconsortium/fruitfly</a>.
-  Code MIT, our data and figures CC-BY 4.0.</p>
+  <p>Do not take this too seriously as a study. It is meant to be fun, and to make a point about
+  who can read criminology. If you want to check it, argue with it, or take it further, everything
+  is open: the code, every trace, the corpus and this control are at
+  <a href="https://github.com/crimconsortium/fruitfly">github.com/crimconsortium/fruitfly</a>. The
+  code is released under the MIT open-source licence, and our data and figures under the
+  open-access Creative Commons Attribution licence (CC-BY 4.0), so anyone may reuse either with
+  credit.</p>
 
   <h2>Notes</h2>
   <ol class="notes">

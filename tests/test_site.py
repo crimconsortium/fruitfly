@@ -14,7 +14,7 @@ import yaml
 ROOT = Path(__file__).resolve().parent.parent
 SITE = ROOT / "site"
 ORIGIN = "https://fruitfly.crimconsortium.com"
-UPDATED = "2026-09-12T12:05:00-04:00"
+UPDATED = "2026-09-12T12:20:00-04:00"
 
 
 class Page(HTMLParser):
