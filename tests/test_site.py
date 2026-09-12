@@ -14,7 +14,7 @@ import yaml
 ROOT = Path(__file__).resolve().parent.parent
 SITE = ROOT / "site"
 ORIGIN = "https://fruitfly.crimconsortium.com"
-UPDATED = "2026-09-12T11:00:00-04:00"
+UPDATED = "2026-09-12T11:15:00-04:00"
 
 
 class Page(HTMLParser):
@@ -296,9 +296,10 @@ def test_stats_requests_fresh_data_and_preserves_displayed_metrics():
     assert result["calls"] == [["stats.json", {"cache": "no-store"}]]
     assert not result["errors"]
     cards = re.findall(r"<b>([^<]*)</b><span>([^<]*)</span>", result["elements"]["stats"]["html"])
+    # Every counter is thousands-separated, so 5,248 never appears next to 20,000 as "5248".
     assert cards == [
-        (str(stats["result"]["reachable"]), "papers read"),
-        (str(stats["result"]["walls_hit"]), "paywalls hit"),
+        (f'{stats["result"]["reachable"]:,}', "papers read"),
+        (f'{stats["result"]["walls_hit"]:,}', "paywalls hit"),
         (f'{stats["engine"]["neurons"]:,}', "neurons simulated"),
     ]
     # "moves" duplicated "papers read", so it is deliberately absent.
@@ -342,6 +343,12 @@ def test_legacy_single_shuffle_calibration_remains_supported(extra):
     assert "Shuffled control: <strong>67%</strong>" in html
     assert "Chance: 13%." in html
     assert "mean of" not in html
+
+
+def test_the_control_reads_like_the_rest_of_the_page():
+    body = (SITE / "index.html").read_text()
+    assert "<h2>Did the brain matter?</h2>" in body
+    assert 'class="null"' not in body and ".null {" not in body
 
 
 def test_calibration_verdict_is_plain_text_not_html():
